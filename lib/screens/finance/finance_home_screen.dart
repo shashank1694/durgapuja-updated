@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-import '../../services/speech_service.dart';
+import '../../l10n/app_localizations.dart';
 import '../../utils/colors.dart';
 import '../../services/translation_service.dart';
 import '../../services/gpt_service.dart';
@@ -19,18 +19,26 @@ class FinanceHomeScreen extends StatefulWidget {
 }
 
 class _FinanceHomeScreenState extends State<FinanceHomeScreen> {
-  final SpeechService _speechService = SpeechService();
+  final TextEditingController _transactionInputController =
+      TextEditingController();
   final TranslationService _translationService = TranslationService();
   int _selectedTab = 0; // 0 for Pending Payments, 1 for Upcoming Deliveries
   double _totalIncome = 0.0;
   double _totalExpenses = 0.0;
   double get _currentBalance => _totalIncome - _totalExpenses;
   bool _showManagementView = false; // Toggle between Dashboard and All Sections
+  bool _isProcessingSpeech = false; // Show loading overlay while GPT is processing
 
   @override
   void initState() {
     super.initState();
     _loadFinanceData();
+  }
+
+  @override
+  void dispose() {
+    _transactionInputController.dispose();
+    super.dispose();
   }
 
   @override
@@ -47,33 +55,79 @@ class _FinanceHomeScreenState extends State<FinanceHomeScreen> {
     });
   }
 
-  Future<void> _handleCapturedSpeech(String banglaText) async {
-    debugPrint("Bangla: $banglaText");
-    final englishText =
-        await _translationService.translateToEnglish(banglaText);
-    debugPrint("English: $englishText");
-    final gptJson = await GPTService.sendToGPT(englishText);
-    debugPrint("GPT JSON: $gptJson");
-    if (!mounted) return;
-    final confirmed = await _showGptConfirmationDialog(
-      context,
-      banglaText: banglaText,
-      englishText: englishText,
-      gptJson: gptJson,
-    );
-    if (confirmed) {
-      await FinanceProcessor.processGptResult(
-        gptJson: gptJson,
-        englishText: englishText,
+  void _onSubmitTransaction() {
+    final banglaText = _transactionInputController.text.trim();
+    if (banglaText.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please enter text'),
+          behavior: SnackBarBehavior.floating,
+        ),
       );
-      await _loadFinanceData();
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("Transaction recorded."),
-            behavior: SnackBarBehavior.floating,
-          ),
+      return;
+    }
+    _handleSubmittedText(banglaText);
+  }
+
+  Future<void> _handleSubmittedText(String banglaText) async {
+    if (mounted) {
+      setState(() {
+        _isProcessingSpeech = true;
+      });
+    }
+
+    debugPrint("Bangla: $banglaText");
+    try {
+      // Step 1: Translate
+      final englishText =
+          await _translationService.translateToEnglish(banglaText);
+      debugPrint("English: $englishText");
+
+      if (!mounted) return;
+
+      // Step 2: Send to GPT
+      final gptJson = await GPTService.sendToGPT(englishText);
+      debugPrint("GPT JSON: $gptJson");
+
+      if (!mounted) return;
+
+      setState(() {
+        _isProcessingSpeech = false;
+      });
+
+      // Step 3: Show confirmation dialog
+      final confirmed = await _showGptConfirmationDialog(
+        context,
+        banglaText: banglaText,
+        englishText: englishText,
+        gptJson: gptJson,
+      );
+      if (confirmed) {
+        await FinanceProcessor.processGptResult(
+          gptJson: gptJson,
+          englishText: englishText,
         );
+        await DatabaseService.insertAiLog(
+          bengaliText: banglaText,
+          englishText: englishText,
+          gptJson: gptJson,
+        );
+        await _loadFinanceData();
+        if (mounted) {
+          _transactionInputController.clear();
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text("Transaction recorded."),
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+      }
+    } finally {
+      if (mounted && _isProcessingSpeech) {
+        setState(() {
+          _isProcessingSpeech = false;
+        });
       }
     }
   }
@@ -105,17 +159,19 @@ class _FinanceHomeScreenState extends State<FinanceHomeScreen> {
       onPopInvokedWithResult: (bool didPop, dynamic result) {
         if (!didPop) context.go('/main');
       },
-      child: Scaffold(
-        backgroundColor: AppColors.backgroundCream,
-        body: SafeArea(
-        child: SingleChildScrollView(
-          padding: EdgeInsets.symmetric(
-            horizontal: horizontalPad.clamp(16.0, 24.0),
-            vertical: verticalPad.clamp(8.0, 16.0),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+      child: Stack(
+        children: [
+          Scaffold(
+            backgroundColor: AppColors.backgroundCream,
+            body: SafeArea(
+            child: SingleChildScrollView(
+              padding: EdgeInsets.symmetric(
+                horizontal: horizontalPad.clamp(16.0, 24.0),
+                vertical: verticalPad.clamp(8.0, 16.0),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -161,124 +217,117 @@ class _FinanceHomeScreenState extends State<FinanceHomeScreen> {
               if (!_showManagementView) _buildQuickNavigationChips(),
               SizedBox(height: size.height * 0.028),
 
-              // 🎤 MIC CONTAINER — first tap START, second tap STOP → capture → translate → GPT → confirm
-              GestureDetector(
-                onTap: () async {
-                  if (!_speechService.isListening) {
-                    final started = await _speechService.startListening();
-                    if (mounted) setState(() {});
-                    if (!started) {
-                      if (mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text("Could not start listening."),
-                            backgroundColor: Colors.red,
-                            behavior: SnackBarBehavior.floating,
+              // Text input for Bengali transaction — submit → GPT → confirm → database → UI
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final size = MediaQuery.of(context).size;
+                  final pad = size.width * 0.06;
+                  final radius = size.width * 0.06;
+                  return Container(
+                    width: double.infinity,
+                    padding: EdgeInsets.all(pad.clamp(16.0, 28.0)),
+                    decoration: BoxDecoration(
+                      color: AppColors.cardCream,
+                      borderRadius: BorderRadius.circular(radius),
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Text(
+                          lang.getText('record_voice_note'),
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
                           ),
-                        );
-                      }
-                      return;
-                    }
-                    return;
-                  }
-                  final banglaText = await _speechService.stopListening();
-                  if (mounted) setState(() {});
-
-                  if (banglaText.isEmpty) {
-                    if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text("No speech detected. Try again."),
-                          backgroundColor: Colors.red,
-                          behavior: SnackBarBehavior.floating,
                         ),
-                      );
-                    }
-                    return;
-                  }
-                  await _handleCapturedSpeech(banglaText);
+                        SizedBox(height: size.height * 0.012),
+                        TextField(
+                          controller: _transactionInputController,
+                          decoration: InputDecoration(
+                            hintText: lang.getText('type_transaction_bengali'),
+                            hintStyle: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey.shade600,
+                            ),
+                            filled: true,
+                            fillColor: Colors.white,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              borderSide: BorderSide(
+                                color: AppColors.primaryBrown.withOpacity(0.3),
+                              ),
+                            ),
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 14,
+                            ),
+                          ),
+                          maxLines: 2,
+                          textInputAction: TextInputAction.done,
+                          onSubmitted: (_) => _onSubmitTransaction(),
+                        ),
+                        SizedBox(height: size.height * 0.012),
+                        ElevatedButton.icon(
+                          onPressed: _isProcessingSpeech
+                              ? null
+                              : () => _onSubmitTransaction(),
+                          icon: const Icon(Icons.send, size: 20),
+                          label: Text(lang.getText('submit')),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primaryBrown,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                        ),
+                        SizedBox(height: size.height * 0.01),
+                        Text(
+                          lang.getText('example_inputs'),
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Colors.black54,
+                          ),
+                        ),
+                        SizedBox(height: size.height * 0.005),
+                        Text(
+                          AppLocalizations.of(context)!.financeExampleExpense,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.black54,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        Text(
+                          AppLocalizations.of(context)!.financeExampleAdvance,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.black54,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        Text(
+                          AppLocalizations.of(context)!.financeExampleMaterial,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.black54,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        Text(
+                          AppLocalizations.of(context)!.financeExampleReceived,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.black54,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ),
+                  );
                 },
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    final size = MediaQuery.of(context).size;
-                    final pad = size.width * 0.06;
-                    final radius = size.width * 0.06;
-                    return Container(
-                      width: double.infinity,
-                      padding: EdgeInsets.all(pad.clamp(16.0, 28.0)),
-                      decoration: BoxDecoration(
-                        color: AppColors.cardCream,
-                        borderRadius: BorderRadius.circular(radius),
-                      ),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            lang.getText('record_voice_note'),
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          SizedBox(height: size.height * 0.008),
-                          Text(
-                            _speechService.isListening
-                                ? lang.getText('tap_again_to_stop')
-                                : lang.getText('tap_to_record'),
-                            style: const TextStyle(fontSize: 14),
-                            textAlign: TextAlign.center,
-                          ),
-                          SizedBox(height: size.height * 0.02),
-                          AnimatedContainer(
-                            duration: const Duration(milliseconds: 300),
-                            width: 56,
-                            height: 56,
-                            decoration: BoxDecoration(
-                              color: _speechService.isListening
-                                  ? Colors.orange.shade100
-                                  : AppColors.primaryBrown,
-                              shape: BoxShape.circle,
-                            ),
-                            child: Icon(
-                              _speechService.isListening
-                                  ? Icons.graphic_eq
-                                  : Icons.mic,
-                              color: _speechService.isListening
-                                  ? Colors.orange
-                                  : Colors.white,
-                              size: 28,
-                            ),
-                          ),
-                          SizedBox(height: size.height * 0.02),
-                          Text(
-                            lang.getText('example_inputs'),
-                            style: const TextStyle(
-                              fontSize: 12,
-                              color: Colors.black54,
-                            ),
-                          ),
-                          SizedBox(height: size.height * 0.005),
-                          Text(
-                            "Sold 2 idols to Behala Samity for ₹10,000",
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.black54,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                          Text(
-                            "Paid ₹500 for paints at Shyambazar shop",
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.black54,
-                            ),
-                            textAlign: TextAlign.center,
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                ),
               ),
 
               const SizedBox(height: 25),
@@ -288,7 +337,7 @@ class _FinanceHomeScreenState extends State<FinanceHomeScreen> {
                 icon: Icons.account_balance_wallet,
                 title: lang.getText('total_income'),
                 amount: "₹ ${_formatCurrency(_totalIncome)}",
-                changePercent: "3%",
+                changePercent: null,
                 isPositive: true,
                 iconBackground: AppColors.cardCream,
               ),
@@ -300,7 +349,7 @@ class _FinanceHomeScreenState extends State<FinanceHomeScreen> {
                 icon: Icons.shopping_basket,
                 title: lang.getText('total_expenses'),
                 amount: "₹ ${_formatCurrency(_totalExpenses)}",
-                changePercent: "3%",
+                changePercent: null,
                 isPositive: false,
                 iconBackground: AppColors.cardCream,
               ),
@@ -449,6 +498,41 @@ class _FinanceHomeScreenState extends State<FinanceHomeScreen> {
           ),
         ),
       ),
+          ),
+          if (_isProcessingSpeech)
+            Positioned.fill(
+              child: Container(
+                color: Colors.black.withOpacity(0.2),
+                child: Center(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 16,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: const [
+                        SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                        SizedBox(width: 12),
+                        Text(
+                          'Processing your note...',
+                          style: TextStyle(fontSize: 14),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }
@@ -591,7 +675,7 @@ class _FinanceHomeScreenState extends State<FinanceHomeScreen> {
                       ),
                       const SizedBox(height: 10),
                       if (intent != null)
-                        buildField("Intent", asString(intent)),
+                        buildField("Transaction Type", asString(intent)),
                       if (name != null) buildField("Name", asString(name)),
                       if (amount != null)
                         buildField("Amount", asString(amount)),
@@ -969,7 +1053,7 @@ class _FinanceHomeScreenState extends State<FinanceHomeScreen> {
           ),
           const SizedBox(width: 8),
           _buildQuickChip(
-            label: "Samiti Funds",
+            label: context.read<LanguageService>().getText('samiti_funds'),
             isSelected: false,
             onTap: () {
               context.go('/finance/samiti-funds');
@@ -977,7 +1061,7 @@ class _FinanceHomeScreenState extends State<FinanceHomeScreen> {
           ),
           const SizedBox(width: 8),
           _buildQuickChip(
-            label: "Worker Funds",
+            label: context.read<LanguageService>().getText('worker_funds'),
             isSelected: false,
             onTap: () {
               context.go('/finance/worker-funds');
@@ -985,7 +1069,7 @@ class _FinanceHomeScreenState extends State<FinanceHomeScreen> {
           ),
           const SizedBox(width: 8),
           _buildQuickChip(
-            label: "Worker Details",
+            label: context.read<LanguageService>().getText('worker_details'),
             isSelected: false,
             onTap: () {
               context.go('/finance/worker-details');

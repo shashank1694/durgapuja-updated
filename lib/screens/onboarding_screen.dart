@@ -32,7 +32,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   final List<OnboardingItem> _onboardingItems = [
     const OnboardingItem(
-      title: 'Welcome to Durga Idol Maker',
+      title: 'Welcome to ShilpiBondhu',
       description: 'Create beautiful custom Durga idols with AI-powered design tools and manage your business efficiently.',
       icon: Icons.palette_outlined,
       imagePath: 'assets/images/onboarding_1.png',

@@ -1,5 +1,5 @@
 class AppConstants {
-  static const String appName = 'Durga Idol Maker';
+  static const String appName = 'ShilpiBondhu';
   
   static const String baseUrl = 'https://api.durgaidolmaker.com'; //fastapi server for backend
 

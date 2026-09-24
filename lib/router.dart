@@ -22,6 +22,7 @@ import 'screens/orders/delivery_dates_screen.dart';
 import 'screens/orders/record_payment_screen.dart';
 import 'screens/orders/send_update_screen.dart';
 import 'screens/reports/reports_screen.dart';
+import 'screens/reports/ai_logs_screen.dart';
 import 'screens/inventory_screen.dart';
 import 'screens/analytics_dashboard_screen.dart';
 import 'screens/admin/admin_dashboard_screen.dart';
@@ -120,6 +121,10 @@ final GoRouter router = GoRouter(
         GoRoute(
           path: '/finance/reports',
           builder: (context, state) => const ReportsScreen(),
+        ),
+        GoRoute(
+          path: '/finance/ai-logs',
+          builder: (context, state) => const AiLogsScreen(),
         ),
         // Finance-specific routes — Material Tracker only (material_tracker_screen.dart)
         GoRoute(
@@ -301,7 +306,7 @@ int _getFinanceIndex(String path) {
   if (path.startsWith('/finance/materials')) return 1;
   if (path.startsWith('/finance/samiti-funds')) return 2;
   if (path.startsWith('/finance/worker-funds')) return 3;
-  if (path.startsWith('/finance/reports')) return 4;
+  if (path.startsWith('/finance/reports') || path.startsWith('/finance/ai-logs')) return 4;
   return 0;
 }
 

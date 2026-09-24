@@ -1,9 +1,5 @@
 import 'package:flutter/material.dart';
 import '../utils/colors.dart';
-import '../services/speech_service.dart';
-import '../services/translation_service.dart';
-import '../services/gpt_service.dart';
-import '../services/finance_processor.dart';
 
 class CustomBottomNav extends StatefulWidget {
   final int currentIndex;
@@ -20,9 +16,6 @@ class CustomBottomNav extends StatefulWidget {
 }
 
 class _CustomBottomNavState extends State<CustomBottomNav> {
-  final SpeechService _speechService = SpeechService();
-  final TranslationService _translationService = TranslationService();
-
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -59,82 +52,15 @@ class _CustomBottomNavState extends State<CustomBottomNav> {
                 index: 1,
               ),
             ),
-            // Central Microphone Button — first tap START, second tap STOP
+            // Center: shortcut to Finance (transaction input is on Finance screen)
             GestureDetector(
-              onTap: () async {
-                if (!_speechService.isListening) {
-                  final started = await _speechService.startListening();
-                  if (mounted) setState(() {});
-                  if (!started) {
-                    if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text("Unable to start listening."),
-                          backgroundColor: Colors.red,
-                          behavior: SnackBarBehavior.floating,
-                        ),
-                      );
-                    }
-                    return;
-                  }
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text("Listening... tap again to stop"),
-                      behavior: SnackBarBehavior.floating,
-                    ),
-                  );
-                  return;
-                }
-
-                final banglaText = await _speechService.stopListening();
-                if (mounted) setState(() {});
-
-                if (banglaText.isEmpty) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text("No speech detected. Try again."),
-                      backgroundColor: Colors.red,
-                      behavior: SnackBarBehavior.floating,
-                    ),
-                  );
-                  return;
-                }
-
-                debugPrint("Bangla: $banglaText");
-                final englishText =
-                    await _translationService.translateToEnglish(banglaText);
-                debugPrint("English: $englishText");
-                final gptJson = await GPTService.sendToGPT(englishText);
-                debugPrint("GPT JSON: $gptJson");
-
-                final confirmed = await _showGptConfirmationDialog(
-                  context,
-                  banglaText: banglaText,
-                  englishText: englishText,
-                  gptJson: gptJson,
-                );
-                if (confirmed) {
-                  await FinanceProcessor.processGptResult(
-                    gptJson: gptJson,
-                    englishText: englishText,
-                  );
-                  if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text("Transaction recorded."),
-                        behavior: SnackBarBehavior.floating,
-                      ),
-                    );
-                  }
-                }
-              },
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 300),
+              onTap: () => widget.onTap(2),
+              child: Container(
                 width: 56,
                 height: 56,
                 decoration: BoxDecoration(
-                  color: _speechService.isListening
-                      ? Colors.orange.shade100
+                  color: widget.currentIndex == 2
+                      ? AppColors.primaryBrown.withOpacity(0.9)
                       : AppColors.primaryBrown,
                   shape: BoxShape.circle,
                   boxShadow: [
@@ -146,8 +72,8 @@ class _CustomBottomNavState extends State<CustomBottomNav> {
                   ],
                 ),
                 child: Icon(
-                  _speechService.isListening ? Icons.graphic_eq : Icons.mic,
-                  color: _speechService.isListening ? Colors.orange : Colors.white,
+                  Icons.account_balance_wallet,
+                  color: Colors.white,
                   size: 26,
                 ),
               ),
@@ -236,177 +162,4 @@ class _CustomBottomNavState extends State<CustomBottomNav> {
       ),
     );
   }
-}
-
-Future<bool> _showGptConfirmationDialog(
-  BuildContext context, {
-  required String banglaText,
-  required String englishText,
-  required Map<String, dynamic> gptJson,
-}) async {
-  String asString(dynamic value) => value == null ? 'null' : value.toString();
-
-  final workerType = gptJson['worker_type'];
-  final idolType = gptJson['idol_type'];
-  final confidence = gptJson['confidence'];
-  final intent = gptJson['intent'];
-  final amount = gptJson['amount'];
-  final category = gptJson['category'];
-  final name = gptJson['name'] ?? gptJson['worker_name'];
-
-  Widget buildField(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 3),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            "$label: ",
-            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
-          ),
-          Expanded(child: Text(value, style: const TextStyle(fontSize: 14))),
-        ],
-      ),
-    );
-  }
-
-  final otherFields = <Widget>[];
-  gptJson.forEach((key, value) {
-    if (key == 'intent' ||
-        key == 'amount' ||
-        key == 'category' ||
-        key == 'name' ||
-        key == 'worker_name' ||
-        key == 'worker_type' ||
-        key == 'idol_type' ||
-        key == 'confidence') {
-      return;
-    }
-    otherFields.add(buildField(key.toString(), asString(value)));
-  });
-
-  final result = await showDialog<bool>(
-    context: context,
-    barrierDismissible: false,
-    builder: (context) {
-      return AlertDialog(
-        title: const Text('Confirm transaction'),
-        content: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Bengali text block
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF5E6D3),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      "🗣 Bengali Text",
-                      style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 14,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(banglaText),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 12),
-
-              // English text block
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF5E6D3),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      "🌍 English Text",
-                      style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        fontSize: 14,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(englishText),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 12),
-
-              // Classified result block with pill header
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFFF1E6),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFFFE0C2),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: const Text(
-                        "Classified Result",
-                        style: TextStyle(
-                          color: Color(0xFF8B4513),
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 10),
-                    if (intent != null) buildField("Intent", asString(intent)),
-                    if (name != null) buildField("Name", asString(name)),
-                    if (amount != null) buildField("Amount", asString(amount)),
-                    if (category != null)
-                      buildField("Category", asString(category)),
-                    if (workerType != null)
-                      buildField("Worker Type", asString(workerType)),
-                    if (idolType != null)
-                      buildField("Idol Type", asString(idolType)),
-                    if (confidence != null)
-                      buildField("Confidence", asString(confidence)),
-                    if (otherFields.isNotEmpty) const SizedBox(height: 8),
-                    ...otherFields,
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text("❌ NO, DISCARD"),
-          ),
-          ElevatedButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text("✅ YES, THIS IS CORRECT"),
-          ),
-        ],
-      );
-    },
-  );
-
-  return result ?? false;
 }

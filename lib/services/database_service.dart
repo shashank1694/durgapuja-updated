@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 
@@ -9,6 +10,7 @@ class DatabaseService {
   static const String _samitiFundsTableName = 'samiti_funds';
   static const String _workerFundsTableName = 'worker_funds';
   static const String _workerPaymentsTableName = 'worker_payments';
+  static const String _aiLogsTableName = 'ai_logs';
 
   static Future<Database> getDatabase() async {
     if (_database != null) return _database!;
@@ -20,7 +22,7 @@ class DatabaseService {
     String path = join(await getDatabasesPath(), 'idolkaker.db');
     return await openDatabase(
       path,
-      version: 6,
+      version: 7,
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE $_tableName (
@@ -268,6 +270,20 @@ class DatabaseService {
             )
           ''');
         }
+
+        if (oldVersion < 7) {
+          await db.execute('''
+            CREATE TABLE IF NOT EXISTS $_aiLogsTableName (
+              id INTEGER PRIMARY KEY AUTOINCREMENT,
+              timestamp TEXT NOT NULL,
+              bengali_text TEXT NOT NULL,
+              english_text TEXT NOT NULL,
+              gpt_json TEXT NOT NULL,
+              intent TEXT,
+              amount REAL
+            )
+          ''');
+        }
       },
     );
   }
@@ -353,6 +369,67 @@ class DatabaseService {
       limit: 1,
     );
     return rows.isNotEmpty ? rows.first : null;
+  }
+
+  /// Insert AI log after user confirms a GPT transaction.
+  static Future<void> insertAiLog({
+    required String bengaliText,
+    required String englishText,
+    required Map<String, dynamic> gptJson,
+  }) async {
+    final db = await getDatabase();
+    final intent = gptJson['intent'] as String?;
+    final amountRaw = gptJson['amount'];
+    final amount = amountRaw is num
+        ? amountRaw.toDouble()
+        : (amountRaw != null ? double.tryParse(amountRaw.toString()) : null);
+    await db.insert(
+      _aiLogsTableName,
+      {
+        'timestamp': DateTime.now().toIso8601String(),
+        'bengali_text': bengaliText,
+        'english_text': englishText,
+        'gpt_json': jsonEncode(gptJson),
+        'intent': intent,
+        'amount': amount,
+      },
+    );
+  }
+
+  /// Get all AI logs, latest first.
+  static Future<List<Map<String, dynamic>>> getAllAiLogs() async {
+    final db = await getDatabase();
+    try {
+      final rows = await db.query(
+        _aiLogsTableName,
+        orderBy: 'id DESC',
+      );
+      return List<Map<String, dynamic>>.from(rows);
+    } catch (e) {
+      // If the table does not exist (older installs), create it defensively.
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS $_aiLogsTableName (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          timestamp TEXT NOT NULL,
+          bengali_text TEXT NOT NULL,
+          english_text TEXT NOT NULL,
+          gpt_json TEXT NOT NULL,
+          intent TEXT,
+          amount REAL
+        )
+      ''');
+      return [];
+    }
+  }
+
+  /// Delete an AI log by id.
+  static Future<void> deleteAiLog(int id) async {
+    final db = await getDatabase();
+    await db.delete(
+      _aiLogsTableName,
+      where: 'id = ?',
+      whereArgs: [id],
+    );
   }
 
   static Future<void> deleteTransaction(int id) async {
@@ -586,6 +663,7 @@ class DatabaseService {
   static Future<void> insertWorkerFundManual({
     required String idolType,
     required String workerType,
+    required String workerName,
     required double amountPaid,
     double amountTotal = 0,
   }) async {
@@ -594,7 +672,7 @@ class DatabaseService {
       type: 'expense',
       amount: amountPaid,
       category: 'worker',
-      sourceText: 'Manual Worker Payment',
+      sourceText: 'Manual Worker Payment: $workerName',
     );
 
     // 2) Insert into worker_funds
@@ -605,8 +683,26 @@ class DatabaseService {
       amountTotal: amountTotal,
     );
 
-    // 3) Update idolmaker totals
+    // 3) Insert into worker_payments (for Worker Funds UI totals)
+    final workerTypeKey = _workerTypeDisplayToKey(workerType);
+    await insertWorkerPayment(
+      workerName: workerName,
+      workerType: workerTypeKey,
+      idolType: idolType,
+      amount: amountPaid,
+    );
+
+    // 4) Update idolmaker totals
     await updateExpenses(amountPaid);
+  }
+
+  static String _workerTypeDisplayToKey(String display) {
+    final lower = display.toLowerCase();
+    if (lower.contains('clay') || lower.contains('claymaking')) return 'clay';
+    if (lower.contains('paint')) return 'painting';
+    if (lower.contains('decoration')) return 'decoration';
+    if (lower.contains('transport')) return 'transport';
+    return 'other';
   }
 
   /// Update a worker fund payment by adding [additionalPaid] to amount_paid.

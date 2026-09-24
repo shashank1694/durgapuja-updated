@@ -27,7 +27,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Should show onboarding screen first
-      expect(find.text('Welcome to Durga Idol Maker'), findsOneWidget);
+      expect(find.text('Welcome to ShilpiBondhu'), findsOneWidget);
       expect(find.text('Skip'), findsOneWidget);
 
       // Tap skip to go to module selection
@@ -227,7 +227,7 @@ void main() {
       expect(stopwatch.elapsedMilliseconds, lessThan(5000));
 
       // Should show onboarding screen
-      expect(find.text('Welcome to Durga Idol Maker'), findsOneWidget);
+      expect(find.text('Welcome to ShilpiBondhu'), findsOneWidget);
     });
 
     testWidgets('Navigation performance', (tester) async {

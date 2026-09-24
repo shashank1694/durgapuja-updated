@@ -9,28 +9,28 @@ class AppLocalizationsBn extends AppLocalizations {
   AppLocalizationsBn([String locale = 'bn']) : super(locale);
 
   @override
-  String get appTitle => 'দুর্গা মূর্তি নির্মাতা';
+  String get appTitle => 'শিল্পীবন্ধু';
 
   @override
-  String get helloArtisan => 'নমস্কার, কারিগর';
+  String get helloArtisan => 'নমস্কার, শিল্পী';
 
   @override
   String get chooseModule => 'শুরু করতে আপনার মডিউল চয়ন করুন';
 
   @override
-  String get finance => 'অর্থ';
+  String get finance => 'আর্থিক';
 
   @override
-  String get financeDescription => 'ব্যয়, উপকরণ এবং অর্থ প্রদান ট্র্যাক করুন';
+  String get financeDescription => 'আয়, ব্যয় এবং উপকরণের হিসাব';
 
   @override
-  String get design => 'ডিজাইন';
+  String get design => 'প্রতিমা ডিজাইন করুন';
 
   @override
   String get designDescription => 'মূর্তি ডিজাইন তৈরি এবং কাস্টমাইজ করুন';
 
   @override
-  String get dashboard => 'ড্যাশবোর্ড';
+  String get dashboard => 'সাজসজ্জা এবং সূক্ষ্ম কাজ';
 
   @override
   String get orders => 'অর্ডার';
@@ -51,7 +51,7 @@ class AppLocalizationsBn extends AppLocalizations {
   String get materialsBought => 'কেনা উপকরণ';
 
   @override
-  String get pendingPayments => 'অপেক্ষমান অর্থ প্রদান';
+  String get pendingPayments => 'বকেয়া পেমেন্ট';
 
   @override
   String get viewReport => 'রিপোর্ট দেখুন';
@@ -82,29 +82,28 @@ class AppLocalizationsBn extends AppLocalizations {
   String get startRecording => 'রেকর্ডিং শুরু করুন';
 
   @override
-  String get cancel => 'বাতিল';
+  String get cancel => 'বাতিল করুন';
 
   @override
-  String get welcomeArtisan => 'স্বাগতম, কারিগর';
+  String get welcomeArtisan => 'স্বাগতম, শিল্পী';
 
   @override
   String get ideaGeneration => 'ধারণা তৈরি';
 
   @override
-  String get ideaGenerationDesc => 'AI দিয়ে অনন্য মূর্তি ডিজাইন তৈরি করুন';
+  String get ideaGenerationDesc => 'AI দিয়ে অনন্য প্রতিমা ডিজাইন তৈরি করুন';
 
   @override
-  String get idolBuild => 'মূর্তি নির্মাণ';
+  String get idolBuild => 'প্রতিমা নির্মাণ';
 
   @override
-  String get idolBuildDesc => 'আপনার মূর্তি তৈরির ধাপে ধাপে গাইড';
+  String get idolBuildDesc => 'ধাপে ধাপে প্রতিমা গড়ুন';
 
   @override
-  String get decorationDetailing => 'সাজসজ্জা এবং বিস্তারিত';
+  String get decorationDetailing => 'সাজসজ্জা এবং সূক্ষ্ম কাজ';
 
   @override
-  String get decorationDetailingDesc =>
-      'আপনার মূর্তিতে বিস্তারিত এবং সাজসজ্জা যোগ করুন';
+  String get decorationDetailingDesc => 'প্রতিমায় সাজসজ্জা করুন';
 
   @override
   String get idolPreviews => 'মূর্তি প্রিভিউ';
@@ -113,23 +112,23 @@ class AppLocalizationsBn extends AppLocalizations {
   String get idolPreviewsDesc => 'আপনার সৃষ্টিগুলি প্রদর্শন করুন';
 
   @override
-  String get generateBackdrop => 'ব্যাকড্রপ তৈরি করুন';
+  String get generateBackdrop => 'চালচিত্র ডিজাইন করুন';
 
   @override
   String get generateBackdropDesc =>
-      'আপনার মূর্তির জন্য সুন্দর ব্যাকড্রপ তৈরি করুন';
+      'আপনার মূর্তির জন্য সুন্দর চালচিত্র ডিজাইন করুন';
 
   @override
   String get tryLights => 'আলো পরীক্ষা করুন';
 
   @override
-  String get tryLightsDesc => 'আলোর প্রভাব নিয়ে পরীক্ষা করুন';
+  String get tryLightsDesc => 'আলোর প্রভাব পরীক্ষা করুন';
 
   @override
-  String get clients => 'ক্লায়েন্ট';
+  String get clients => 'খদ্দের';
 
   @override
-  String get searchClients => 'ক্লায়েন্ট খুঁজুন';
+  String get searchClients => 'খদ্দের খুঁজুন';
 
   @override
   String get chooseYourModule => 'Choose Your Module';
@@ -153,4 +152,16 @@ class AppLocalizationsBn extends AppLocalizations {
 
   @override
   String get continueWithDesign => 'Continue with Design (Default)';
+
+  @override
+  String get financeExampleExpense => '৫০০ টাকার মাটি কিনেছি';
+
+  @override
+  String get financeExampleAdvance => '২০০০ টাকা অগ্রিম পেয়েছি';
+
+  @override
+  String get financeExampleMaterial => 'উপকরণের খরচ';
+
+  @override
+  String get financeExampleReceived => 'পেমেন্ট পেয়েছি';
 }

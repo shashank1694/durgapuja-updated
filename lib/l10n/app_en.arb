@@ -1,5 +1,5 @@
 {
-  "appTitle": "Durga Idol Maker",
+  "appTitle": "ShilpiBondhu",
   "helloArtisan": "Hello, Artisan",
   "chooseModule": "Choose your module to get started",
   "finance": "Finance",
@@ -45,5 +45,9 @@
   "designModuleDescription": "Create and customize idol designs",
   "financeModule": "Finance Module",
   "financeModuleDescription": "Track expenses, materials, and payments",
-  "continueWithDesign": "Continue with Design (Default)"
+  "continueWithDesign": "Continue with Design (Default)",
+  "financeExampleExpense": "Bought clay for 500",
+  "financeExampleAdvance": "Paid advance 2000",
+  "financeExampleMaterial": "Material expense",
+  "financeExampleReceived": "Received payment"
 }

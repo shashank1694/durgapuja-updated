@@ -118,18 +118,19 @@ class FinanceProcessor {
       return; // Early return for samiti_fund
     }
 
-    // Handle order_payment intent (informational, doesn't affect totals automatically)
+    // Handle order_payment intent (client paid for an idol/order)
     if (intent == 'order_payment') {
-      // For now, treat as income but don't auto-update totals
-      // This can be extended later to insert into orders table
+      // 1) Log as an income transaction (category kept generic for now)
       await DatabaseService.insertTransaction(
         type: 'income',
         amount: amount,
         category: 'other',
         sourceText: englishText,
       );
-      // Note: order_payment doesn't automatically update totals per requirements
-      return;
+
+      // 2) Update overall income totals so it reflects on the dashboard
+      await DatabaseService.updateIncome(amount);
+      return; // Early return for order_payment
     }
 
     // Handle legacy income/expense intents (backward compatibility)

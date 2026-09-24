@@ -9,7 +9,7 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
-  String get appTitle => 'Durga Idol Maker';
+  String get appTitle => 'ShilpiBondhu';
 
   @override
   String get helloArtisan => 'Hello, Artisan';
@@ -153,4 +153,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get continueWithDesign => 'Continue with Design (Default)';
+
+  @override
+  String get financeExampleExpense => 'Bought clay for 500';
+
+  @override
+  String get financeExampleAdvance => 'Paid advance 2000';
+
+  @override
+  String get financeExampleMaterial => 'Material expense';
+
+  @override
+  String get financeExampleReceived => 'Received payment';
 }

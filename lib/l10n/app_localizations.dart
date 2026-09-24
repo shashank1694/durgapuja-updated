@@ -101,7 +101,7 @@ abstract class AppLocalizations {
   /// No description provided for @appTitle.
   ///
   /// In en, this message translates to:
-  /// **'Durga Idol Maker'**
+  /// **'ShilpiBondhu'**
   String get appTitle;
 
   /// No description provided for @helloArtisan.
@@ -379,6 +379,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Continue with Design (Default)'**
   String get continueWithDesign;
+
+  /// No description provided for @financeExampleExpense.
+  ///
+  /// In en, this message translates to:
+  /// **'Bought clay for 500'**
+  String get financeExampleExpense;
+
+  /// No description provided for @financeExampleAdvance.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid advance 2000'**
+  String get financeExampleAdvance;
+
+  /// No description provided for @financeExampleMaterial.
+  ///
+  /// In en, this message translates to:
+  /// **'Material expense'**
+  String get financeExampleMaterial;
+
+  /// No description provided for @financeExampleReceived.
+  ///
+  /// In en, this message translates to:
+  /// **'Received payment'**
+  String get financeExampleReceived;
 }
 
 class _AppLocalizationsDelegate

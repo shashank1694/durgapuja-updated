@@ -402,6 +402,26 @@ class _ReportsScreenState extends State<ReportsScreen> {
 
               const SizedBox(height: 30),
 
+              // View All AI Transactions
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  onPressed: () => context.go('/finance/ai-logs'),
+                  icon: const Icon(Icons.smart_toy_outlined, size: 20),
+                  label: const Text('View All AI Transactions'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppColors.primaryBrown,
+                    side: const BorderSide(color: AppColors.primaryBrown),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+              ),
+
+              const SizedBox(height: 30),
+
               // Detailed Reports Section
               Text(
                 lang.getText('detailed_reports'),

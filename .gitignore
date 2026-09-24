@@ -16,6 +16,9 @@ migrate_working_dir/
 .env
 .env.local
 
+# API keys (never commit secrets)
+lib/config/api_keys.dart
+
 # IntelliJ related
 *.iml
 *.ipr

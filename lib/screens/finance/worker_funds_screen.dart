@@ -147,6 +147,7 @@ class _WorkerFundsScreenState extends State<WorkerFundsScreen> {
                           category: "Durga Idol / Claymaking",
                           budget: "0",
                           paid: "0",
+                          isNewWorker: true,
                         ),
                       ),
                     );

@@ -70,7 +70,7 @@ class MyApp extends StatelessWidget {
         final isBn = languageService.currentLanguage == AppLanguage.bn;
 
         return MaterialApp.router(
-          title: 'Durga Idol Maker',
+          title: 'ShilpiBondhu',
           theme: ThemeData(
             primaryColor: AppColors.primaryBrown,
             useMaterial3: true,

@@ -121,7 +121,7 @@ class _SignInScreenState extends State<SignInScreen> {
 
                 // Title
                 Text(
-                  'Durga Idol Maker',
+                  'ShilpiBondhu',
                   style: TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.bold,

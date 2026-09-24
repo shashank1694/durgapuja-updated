@@ -127,7 +127,7 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
 
                 // Title
                 Text(
-                  'Welcome to Durga Idol Maker',
+                  'Welcome to ShilpiBondhu',
                   style: TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.bold,
