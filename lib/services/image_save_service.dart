@@ -2,7 +2,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:firebase_storage/firebase_storage.dart';
-import '../../models/generated_image.dart';
 
 class ImageSaveService {
   final FirebaseStorage _storage = FirebaseStorage.instance;
@@ -27,7 +26,11 @@ class ImageSaveService {
   }
 
   /// Uploads image to Firebase Storage
-  Future<String> uploadToCloud(String imageUrl, String userId, String imageName) async {
+  Future<String> uploadToCloud(
+    String imageUrl,
+    String userId,
+    String imageName,
+  ) async {
     try {
       // Download image
       final http.Response response = await http.get(Uri.parse(imageUrl));
@@ -36,7 +39,8 @@ class ImageSaveService {
       }
 
       // Create storage reference
-      final fileName = '${userId}/${imageName}_${DateTime.now().millisecondsSinceEpoch}.jpg';
+      final fileName =
+          '$userId/${imageName}_${DateTime.now().millisecondsSinceEpoch}.jpg';
       final ref = _storage.ref().child('designs/$fileName');
 
       // Upload file
@@ -65,7 +69,11 @@ class ImageSaveService {
   }
 
   /// Saves image to favorites
-  Future<void> saveToFavorites(String imageUrl, String userId, String imageName) async {
+  Future<void> saveToFavorites(
+    String imageUrl,
+    String userId,
+    String imageName,
+  ) async {
     try {
       // This would typically save to Firestore or local database
       // For now, we'll just return success
@@ -86,7 +94,8 @@ class ImageSaveService {
 
       // Create temporary file
       final directory = Directory.systemTemp;
-      final fileName = 'edit_image_${DateTime.now().millisecondsSinceEpoch}.jpg';
+      final fileName =
+          'edit_image_${DateTime.now().millisecondsSinceEpoch}.jpg';
       final file = File('${directory.path}/$fileName');
       await file.writeAsBytes(response.bodyBytes);
 

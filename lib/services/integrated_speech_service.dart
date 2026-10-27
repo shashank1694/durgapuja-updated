@@ -1,6 +1,5 @@
 import 'dart:io';
 import 'dart:async';
-import 'package:flutter/foundation.dart';
 import 'package:record/record.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as path;
@@ -12,13 +11,13 @@ import '../config/api_keys.dart';
 class IntegratedSpeechService {
   final OpenAISpeechService _openAIService;
   final AudioRecorder _recorder = AudioRecorder();
-  
+
   File? _recordedAudioFile;
   bool _isRecording = false;
   StreamSubscription<RecordState>? _recordStateSubscription;
-  
+
   IntegratedSpeechService()
-      : _openAIService = OpenAISpeechService(ApiKeys.openAI);
+    : _openAIService = OpenAISpeechService(ApiKeys.openAI);
 
   /// Checks if recording permission is granted
   Future<bool> hasPermission() async {
@@ -31,7 +30,7 @@ class IntegratedSpeechService {
   }
 
   /// Starts recording audio from the microphone
-  /// 
+  ///
   /// Returns true if recording started successfully
   Future<bool> startRecording() async {
     try {
@@ -65,7 +64,7 @@ class IntegratedSpeechService {
 
       _isRecording = true;
       _recordedAudioFile = File(filePath);
-      
+
       print('Recording started: $filePath');
       return true;
     } catch (e) {
@@ -76,7 +75,7 @@ class IntegratedSpeechService {
   }
 
   /// Stops recording and returns the audio file path
-  /// 
+  ///
   /// Returns the File object of the recorded audio, or null if recording failed
   Future<File?> stopRecording() async {
     if (!_isRecording) {
@@ -91,17 +90,17 @@ class IntegratedSpeechService {
       if (recordPath != null && recordPath.isNotEmpty) {
         _recordedAudioFile = File(recordPath);
         print('Recording stopped: $recordPath');
-        
+
         // Validate file
         if (await _recordedAudioFile!.exists()) {
           final fileSize = await _recordedAudioFile!.length();
           print('Recorded file size: ${fileSize / 1024} KB');
-          
+
           if (fileSize == 0) {
             print('Warning: Recorded file is empty');
             return null;
           }
-          
+
           return _recordedAudioFile;
         } else {
           print('Error: Recorded file does not exist');
@@ -125,12 +124,12 @@ class IntegratedSpeechService {
     try {
       await _recorder.stop();
       _isRecording = false;
-      
+
       // Delete the file if it exists
       if (_recordedAudioFile != null && await _recordedAudioFile!.exists()) {
         await _recordedAudioFile!.delete();
       }
-      
+
       _recordedAudioFile = null;
       print('Recording cancelled');
     } catch (e) {
@@ -139,9 +138,9 @@ class IntegratedSpeechService {
   }
 
   /// Records audio and transcribes it to Bengali using OpenAI Whisper
-  /// 
+  ///
   /// [maxDuration] - Optional maximum recording duration
-  /// 
+  ///
   /// Returns the Bengali transcription text
   Future<String> recordAndTranscribeBengali({
     Duration maxDuration = const Duration(seconds: 30),
@@ -171,9 +170,9 @@ class IntegratedSpeechService {
   }
 
   /// Records audio and gets both Bengali and English versions
-  /// 
+  ///
   /// [maxDuration] - Optional maximum recording duration
-  /// 
+  ///
   /// Returns a map with 'bengali' and 'english' keys
   Future<Map<String, String>> recordAndTranscribe({
     Duration maxDuration = const Duration(seconds: 30),
@@ -203,15 +202,12 @@ class IntegratedSpeechService {
   }
 
   /// Transcribes an existing audio file to Bengali
-  /// 
+  ///
   /// [audioFile] - The audio file to transcribe
   /// [prompt] - Optional context to improve accuracy
-  /// 
+  ///
   /// Returns the Bengali transcription
-  Future<String> transcribeAudioFile(
-    File audioFile, {
-    String? prompt,
-  }) async {
+  Future<String> transcribeAudioFile(File audioFile, {String? prompt}) async {
     try {
       // Validate format
       if (!OpenAISpeechService.isFormatSupported(audioFile.path)) {
@@ -236,9 +232,9 @@ class IntegratedSpeechService {
   }
 
   /// Transcribes audio file and provides both Bengali and English
-  /// 
+  ///
   /// [audioFile] - The audio file to transcribe
-  /// 
+  ///
   /// Returns a map with 'bengali' and 'english' keys
   Future<Map<String, String>> transcribeAudioFileBoth(File audioFile) async {
     try {
@@ -262,9 +258,9 @@ class IntegratedSpeechService {
   }
 
   /// Translates Bengali text to English using OpenAI
-  /// 
+  ///
   /// [bengaliText] - The Bengali text to translate
-  /// 
+  ///
   /// Returns the English translation
   Future<String> translateBengaliText(String bengaliText) async {
     try {
@@ -285,7 +281,8 @@ class IntegratedSpeechService {
   File? get recordedAudioFile => _recordedAudioFile;
 
   /// Gets list of supported audio formats
-  List<String> get supportedFormats => OpenAISpeechService.getSupportedFormats();
+  List<String> get supportedFormats =>
+      OpenAISpeechService.getSupportedFormats();
 
   /// Listen specifically in Bangla (convenience method)
   /// Records audio and transcribes it to Bengali
@@ -300,7 +297,7 @@ class IntegratedSpeechService {
     if (audioFile == null) {
       return '';
     }
-    
+
     return await _openAIService.transcribeToBengali(audioFile);
   }
 

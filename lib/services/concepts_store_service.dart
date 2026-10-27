@@ -42,9 +42,11 @@ class ConceptsStoreService {
       final list = jsonDecode(raw) as List<dynamic>?;
       if (list == null) return [];
       return list
-          .map((e) => (e as Map<dynamic, dynamic>).map(
-                (k, v) => MapEntry(k.toString(), v?.toString() ?? ''),
-              ))
+          .map(
+            (e) => (e as Map<dynamic, dynamic>).map(
+              (k, v) => MapEntry(k.toString(), v?.toString() ?? ''),
+            ),
+          )
           .toList();
     } catch (e) {
       debugPrint('ConceptsStoreService getConcepts: $e');

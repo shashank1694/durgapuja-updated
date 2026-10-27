@@ -71,106 +71,104 @@ class _WorkerFundsScreenState extends State<WorkerFundsScreen> {
             icon: const Icon(Icons.arrow_back),
             onPressed: () => context.go('/finance/dashboard'),
           ),
-        actions: const [
-          LanguageToggleAction(),
-        ],
-      ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // DROPDOWN
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 14,
+          actions: const [LanguageToggleAction()],
+        ),
+        body: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // DROPDOWN
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 14,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(18),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: const [
+                      Text("Durga Idol", style: TextStyle(fontSize: 16)),
+                      Icon(Icons.arrow_drop_down),
+                    ],
+                  ),
                 ),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(18),
+
+                const SizedBox(height: 25),
+
+                // SECTION 1: Clay Modeling
+                _categoryCard(
+                  context,
+                  title: "Clay Modeling",
+                  workers: "3 workers",
+                  paid: "₹ ${_formatCurrency(_clayPaid)}",
+                  total: _formatCurrency(_clayTotalAssigned),
+                  workerName: "Ramesh",
+                  workerPaid:
+                      "₹ ${_formatCurrency(_clayPaid)}", // display same as paid summary
+                  workerPending:
+                      "₹ ${_formatCurrency(_clayTotalAssigned - _clayPaid)}",
                 ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: const [
-                    Text("Durga Idol", style: TextStyle(fontSize: 16)),
-                    Icon(Icons.arrow_drop_down),
-                  ],
+
+                const SizedBox(height: 20),
+
+                // SECTION 2: Painting
+                _categoryCard(
+                  context,
+                  title: "Painting",
+                  workers: "3 workers",
+                  paid: "₹ ${_formatCurrency(_paintingPaid)}",
+                  total: _formatCurrency(_paintingTotalAssigned),
+                  workerName: "Ramesh",
+                  workerPaid:
+                      "₹ ${_formatCurrency(_paintingPaid)}", // display same as paid summary
+                  workerPending:
+                      "₹ ${_formatCurrency(_paintingTotalAssigned - _paintingPaid)}",
                 ),
-              ),
 
-              const SizedBox(height: 25),
+                const SizedBox(height: 25),
 
-              // SECTION 1: Clay Modeling
-              _categoryCard(
-                context,
-                title: "Clay Modeling",
-                workers: "3 workers",
-                paid: "₹ ${_formatCurrency(_clayPaid)}",
-                total: _formatCurrency(_clayTotalAssigned),
-                workerName: "Ramesh",
-                workerPaid:
-                    "₹ ${_formatCurrency(_clayPaid)}", // display same as paid summary
-                workerPending:
-                    "₹ ${_formatCurrency(_clayTotalAssigned - _clayPaid)}",
-              ),
-
-              const SizedBox(height: 20),
-
-              // SECTION 2: Painting
-              _categoryCard(
-                context,
-                title: "Painting",
-                workers: "3 workers",
-                paid: "₹ ${_formatCurrency(_paintingPaid)}",
-                total: _formatCurrency(_paintingTotalAssigned),
-                workerName: "Ramesh",
-                workerPaid:
-                    "₹ ${_formatCurrency(_paintingPaid)}", // display same as paid summary
-                workerPending:
-                    "₹ ${_formatCurrency(_paintingTotalAssigned - _paintingPaid)}",
-              ),
-
-              const SizedBox(height: 25),
-
-              // ADD NEW WORKER BUTTON
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => WorkerDetailsScreen(
-                          workerName: "New Worker",
-                          category: "Durga Idol / Claymaking",
-                          budget: "0",
-                          paid: "0",
-                          isNewWorker: true,
+                // ADD NEW WORKER BUTTON
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => WorkerDetailsScreen(
+                            workerName: "New Worker",
+                            category: "Durga Idol / Claymaking",
+                            budget: "0",
+                            paid: "0",
+                            isNewWorker: true,
+                          ),
                         ),
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF9A5222),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(25),
                       ),
-                    );
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF9A5222),
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(25),
+                    ),
+                    child: const Text(
+                      "Add new worker",
+                      style: TextStyle(fontSize: 16, color: Colors.white),
                     ),
                   ),
-                  child: const Text(
-                    "Add new worker",
-                    style: TextStyle(fontSize: 16, color: Colors.white),
-                  ),
                 ),
-              ),
 
-              const SizedBox(height: 60),
-            ],
+                const SizedBox(height: 60),
+              ],
+            ),
           ),
         ),
-      ),
       ),
     );
   }

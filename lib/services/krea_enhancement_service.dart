@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../../config/api_keys.dart';
-import '../../models/generated_image.dart';
 
 class KreaEnhancementService {
   static const String _baseUrl = 'https://api.krea.ai';
@@ -10,7 +9,7 @@ class KreaEnhancementService {
   final String _apiToken;
 
   KreaEnhancementService()
-      : _apiToken = dotenv.env['KREA_API_TOKEN'] ?? ApiKeys.kreaApiKey;
+    : _apiToken = dotenv.env['KREA_API_TOKEN'] ?? ApiKeys.kreaApiKey;
 
   /// Krea's real enhancement endpoint (Bloom). There is no generic /generate/enhance.
   static const String _enhancePath = '/generate/enhance/topaz/bloom-enhance';
@@ -24,7 +23,7 @@ class KreaEnhancementService {
     if (_apiToken.isEmpty) {
       throw Exception(
         'Krea API token not found. Set KREA_API_TOKEN in .env or kreaApiKey in lib/config/api_keys.dart. '
-        'Get token at: https://krea.ai/settings/api-tokens'
+        'Get token at: https://krea.ai/settings/api-tokens',
       );
     }
 
@@ -54,7 +53,9 @@ class KreaEnhancementService {
         }),
       );
 
-      print('Enhancement submit response status: ${enhanceResponse.statusCode}');
+      print(
+        'Enhancement submit response status: ${enhanceResponse.statusCode}',
+      );
       if (enhanceResponse.body.length < 500) {
         print('Enhancement submit response body: ${enhanceResponse.body}');
       }
@@ -64,19 +65,23 @@ class KreaEnhancementService {
         String errorMessage = 'Failed to submit enhancement job';
         if (body.trim().toLowerCase().startsWith('<!doctype') ||
             body.trim().toLowerCase().startsWith('<html')) {
-          errorMessage = 'Krea API endpoint not found or returned an error. '
+          errorMessage =
+              'Krea API endpoint not found or returned an error. '
               'Check your API key and that the Krea enhance API is available.';
         } else {
           try {
             final error = jsonDecode(body) as Map<String, dynamic>?;
             if (error != null) {
-              errorMessage = error['message']?.toString() ??
+              errorMessage =
+                  error['message']?.toString() ??
                   error['detail']?.toString() ??
                   error['error']?.toString() ??
                   body;
             }
           } catch (_) {
-            errorMessage = body.length > 200 ? '${body.substring(0, 200)}...' : body;
+            errorMessage = body.length > 200
+                ? '${body.substring(0, 200)}...'
+                : body;
           }
         }
         throw Exception('Failed to submit enhancement job: $errorMessage');
@@ -90,11 +95,11 @@ class KreaEnhancementService {
       final jobUrl = Uri.parse('$_baseUrl/jobs/$jobId');
       String status = 'queued';
       Map<String, dynamic>? result;
-      
+
       // Poll for up to 120 seconds (2 minutes) for enhancement
       for (int attempt = 0; attempt < 60; attempt++) {
         await Future.delayed(Duration(seconds: 2));
-        
+
         final statusResponse = await http.get(
           jobUrl,
           headers: {
@@ -104,12 +109,14 @@ class KreaEnhancementService {
         );
 
         if (statusResponse.statusCode != 200) {
-          throw Exception('Failed to check enhancement job status: ${statusResponse.body}');
+          throw Exception(
+            'Failed to check enhancement job status: ${statusResponse.body}',
+          );
         }
 
         final statusData = jsonDecode(statusResponse.body);
         status = statusData['status'] as String;
-        
+
         print('Enhancement job $jobId status: $status');
 
         if (status == 'completed') {
@@ -134,7 +141,7 @@ class KreaEnhancementService {
 
       final enhancedImageUrl = urls[0] as String;
       print('Enhancement completed successfully: $enhancedImageUrl');
-      
+
       return enhancedImageUrl;
     } catch (e) {
       print('Error in Krea enhancement: $e');

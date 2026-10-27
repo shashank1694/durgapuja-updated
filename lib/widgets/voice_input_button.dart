@@ -28,13 +28,9 @@ class _VoiceInputButtonState extends State<VoiceInputButton>
       vsync: this,
     )..repeat(reverse: true);
 
-    _scaleAnimation = Tween<double>(
-      begin: 1.0,
-      end: 1.2,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeInOut,
-    ));
+    _scaleAnimation = Tween<double>(begin: 1.0, end: 1.2).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
+    );
   }
 
   @override
@@ -65,13 +61,18 @@ class _VoiceInputButtonState extends State<VoiceInputButton>
           scale: widget.isListening ? _scaleAnimation.value : 1.0,
           child: Container(
             decoration: BoxDecoration(
-              color: widget.isListening ? AppColors.accentOrange : AppColors.primaryBrown,
+              color: widget.isListening
+                  ? AppColors.accentOrange
+                  : AppColors.primaryBrown,
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: (widget.isListening ? AppColors.accentOrange : AppColors.primaryBrown)
-                      // ignore: deprecated_member_use
-                      .withOpacity(0.3),
+                  color:
+                      (widget.isListening
+                              ? AppColors.accentOrange
+                              : AppColors.primaryBrown)
+                          // ignore: deprecated_member_use
+                          .withOpacity(0.3),
                   blurRadius: widget.isListening ? 20 : 12,
                   spreadRadius: widget.isListening ? 4 : 2,
                 ),

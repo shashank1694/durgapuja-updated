@@ -47,7 +47,7 @@ class AuthProvider with ChangeNotifier {
   Future<void> sendOTP(String phoneNumber) async {
     _isLoading = true;
     notifyListeners();
-    
+
     try {
       await _authService.sendOTP(phoneNumber);
     } finally {
@@ -59,7 +59,7 @@ class AuthProvider with ChangeNotifier {
   Future<UserCredential> verifyOTP(String smsCode) async {
     _isLoading = true;
     notifyListeners();
-    
+
     try {
       return await _authService.verifyOTP(smsCode);
     } finally {
@@ -76,17 +76,17 @@ class AuthProvider with ChangeNotifier {
   Future<void> signInWithPhone(String phoneNumber) async {
     _isLoading = true;
     notifyListeners();
-    
+
     try {
       // In test mode, directly create a mock user
       if (_authService.isTestMode) {
         final mockUser = _authService.createMockUser(
-          'mock_${phoneNumber.replaceAll('+91', '')}', 
-          phoneNumber
+          'mock_${phoneNumber.replaceAll('+91', '')}',
+          phoneNumber,
         );
         _authService.mockUser = mockUser;
         _authService.testAuthController.add(mockUser);
-        
+
         // Load or create user profile
         _userModel = await _authService.getUserProfile(mockUser.uid);
         if (_userModel == null) {
@@ -124,7 +124,11 @@ class AuthProvider with ChangeNotifier {
 
   Future<void> updateUserProfile({String? name, String? email}) async {
     if (_firebaseUser != null) {
-      await _authService.updateUserProfile(_firebaseUser!.uid, name: name, email: email);
+      await _authService.updateUserProfile(
+        _firebaseUser!.uid,
+        name: name,
+        email: email,
+      );
       _userModel = await _authService.getUserProfile(_firebaseUser!.uid);
       notifyListeners();
     }

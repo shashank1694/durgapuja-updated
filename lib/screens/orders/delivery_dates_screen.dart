@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:table_calendar/table_calendar.dart';
 import '../../utils/colors.dart';
 import '../../utils/constants.dart';
-import '../../widgets/custom_bottom_nav.dart';
 import '../../widgets/custom_button.dart';
 
 class DeliveryDatesScreen extends StatefulWidget {
@@ -66,128 +65,128 @@ class _DeliveryDatesScreenState extends State<DeliveryDatesScreen> {
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(AppConstants.mediumPadding),
           child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Delivery Dates',
-              style: TextStyle(
-                fontSize: AppConstants.fontSizeHeading,
-                fontWeight: FontWeight.bold,
-                color: AppColors.textDark,
-              ),
-            ),
-            const SizedBox(height: AppConstants.largePadding),
-
-            if (_showCalendar)
-              Container(
-                padding: const EdgeInsets.all(AppConstants.mediumPadding),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(
-                    AppConstants.borderRadius,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
-                ),
-                child: TableCalendar(
-                  firstDay: DateTime.utc(2024, 1, 1),
-                  lastDay: DateTime.utc(2025, 12, 31),
-                  focusedDay: _focusedDay,
-                  selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
-                  onDaySelected: (selectedDay, focusedDay) {
-                    setState(() {
-                      _selectedDay = selectedDay;
-                      _focusedDay = focusedDay;
-                    });
-                  },
-                  onPageChanged: (focusedDay) {
-                    _focusedDay = focusedDay;
-                  },
-                  calendarStyle: CalendarStyle(
-                    selectedDecoration: BoxDecoration(
-                      color: AppColors.primaryBrown,
-                      shape: BoxShape.circle,
-                    ),
-                    todayDecoration: BoxDecoration(
-                      color: AppColors.accentOrange,
-                      shape: BoxShape.circle,
-                    ),
-                    weekendTextStyle: TextStyle(color: AppColors.warningRed),
-                  ),
-                  headerStyle: HeaderStyle(
-                    formatButtonVisible: false,
-                    titleCentered: true,
-                    titleTextStyle: const TextStyle(
-                      fontSize: AppConstants.fontSizeLarge,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.textDark,
-                    ),
-                  ),
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Delivery Dates',
+                style: TextStyle(
+                  fontSize: AppConstants.fontSizeHeading,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textDark,
                 ),
               ),
-            const SizedBox(height: AppConstants.largePadding),
+              const SizedBox(height: AppConstants.largePadding),
 
-            const Text(
-              'Scheduled Deliveries',
-              style: TextStyle(
-                fontSize: AppConstants.fontSizeLarge,
-                fontWeight: FontWeight.bold,
-                color: AppColors.textDark,
-              ),
-            ),
-            const SizedBox(height: AppConstants.mediumPadding),
-            ..._deliveryOrders.map((order) => _buildDeliveryOrderCard(order)),
-            const SizedBox(height: AppConstants.largePadding),
-
-            CustomButton(
-              label: 'Add delivery date',
-              icon: Icons.calendar_today_outlined,
-              onPressed: () {
-                setState(() {
-                  _showCalendar = !_showCalendar;
-                });
-                if (!_showCalendar) {
-                  _addDeliveryDate();
-                }
-              },
-              backgroundColor: AppColors.primaryBrown,
-            ),
-            const SizedBox(height: AppConstants.mediumPadding),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(
-                vertical: AppConstants.mediumPadding,
-              ),
-              decoration: BoxDecoration(
-                color: AppColors.primaryBrown,
-                borderRadius: BorderRadius.circular(AppConstants.largeRadius),
-              ),
-              child: TextButton.icon(
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('🎙️ Recording delivery details...'),
-                    ),
-                  );
-                },
-                icon: const Icon(Icons.mic, color: Colors.white),
-                label: const Text(
-                  'Record with voice',
-                  style: TextStyle(
+              if (_showCalendar)
+                Container(
+                  padding: const EdgeInsets.all(AppConstants.mediumPadding),
+                  decoration: BoxDecoration(
                     color: Colors.white,
-                    fontSize: AppConstants.fontSizeBody,
-                    fontWeight: FontWeight.w600,
+                    borderRadius: BorderRadius.circular(
+                      AppConstants.borderRadius,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: TableCalendar(
+                    firstDay: DateTime.utc(2024, 1, 1),
+                    lastDay: DateTime.utc(2025, 12, 31),
+                    focusedDay: _focusedDay,
+                    selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
+                    onDaySelected: (selectedDay, focusedDay) {
+                      setState(() {
+                        _selectedDay = selectedDay;
+                        _focusedDay = focusedDay;
+                      });
+                    },
+                    onPageChanged: (focusedDay) {
+                      _focusedDay = focusedDay;
+                    },
+                    calendarStyle: CalendarStyle(
+                      selectedDecoration: BoxDecoration(
+                        color: AppColors.primaryBrown,
+                        shape: BoxShape.circle,
+                      ),
+                      todayDecoration: BoxDecoration(
+                        color: AppColors.accentOrange,
+                        shape: BoxShape.circle,
+                      ),
+                      weekendTextStyle: TextStyle(color: AppColors.warningRed),
+                    ),
+                    headerStyle: HeaderStyle(
+                      formatButtonVisible: false,
+                      titleCentered: true,
+                      titleTextStyle: const TextStyle(
+                        fontSize: AppConstants.fontSizeLarge,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textDark,
+                      ),
+                    ),
+                  ),
+                ),
+              const SizedBox(height: AppConstants.largePadding),
+
+              const Text(
+                'Scheduled Deliveries',
+                style: TextStyle(
+                  fontSize: AppConstants.fontSizeLarge,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textDark,
+                ),
+              ),
+              const SizedBox(height: AppConstants.mediumPadding),
+              ..._deliveryOrders.map((order) => _buildDeliveryOrderCard(order)),
+              const SizedBox(height: AppConstants.largePadding),
+
+              CustomButton(
+                label: 'Add delivery date',
+                icon: Icons.calendar_today_outlined,
+                onPressed: () {
+                  setState(() {
+                    _showCalendar = !_showCalendar;
+                  });
+                  if (!_showCalendar) {
+                    _addDeliveryDate();
+                  }
+                },
+                backgroundColor: AppColors.primaryBrown,
+              ),
+              const SizedBox(height: AppConstants.mediumPadding),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(
+                  vertical: AppConstants.mediumPadding,
+                ),
+                decoration: BoxDecoration(
+                  color: AppColors.primaryBrown,
+                  borderRadius: BorderRadius.circular(AppConstants.largeRadius),
+                ),
+                child: TextButton.icon(
+                  onPressed: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('🎙️ Recording delivery details...'),
+                      ),
+                    );
+                  },
+                  icon: const Icon(Icons.mic, color: Colors.white),
+                  label: const Text(
+                    'Record with voice',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: AppConstants.fontSizeBody,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
               ),
-            ),
-          ],
-        ),
+            ],
+          ),
         ),
       ),
     );

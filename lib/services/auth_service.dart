@@ -11,8 +11,8 @@ class MockUser implements User {
   final String _phoneNumber;
 
   MockUser({required String uid, required String phoneNumber})
-      : _uid = uid,
-        _phoneNumber = phoneNumber;
+    : _uid = uid,
+      _phoneNumber = phoneNumber;
 
   @override
   String get uid => _uid;
@@ -138,15 +138,14 @@ class AuthService {
   }
 
   // Public access to mock user for testing
-  User? get mockUser => _mockUser;
+  // User? get mockUser => _mockUser;
   set mockUser(User? user) => _mockUser = user;
 
   // Public access to test controller for testing
   StreamController<User?> get testAuthController => _testAuthController;
 
-  Stream<User?> get authStateChanges => _isTestMode
-      ? _testAuthController.stream
-      : _auth.authStateChanges();
+  Stream<User?> get authStateChanges =>
+      _isTestMode ? _testAuthController.stream : _auth.authStateChanges();
 
   AuthService() {
     // Initialize Firebase in production mode
@@ -192,7 +191,8 @@ class AuthService {
 
     if (_isTestMode) {
       await Future.delayed(const Duration(seconds: 1));
-      _verificationId = 'test_verification_${DateTime.now().millisecondsSinceEpoch}';
+      _verificationId =
+          'test_verification_${DateTime.now().millisecondsSinceEpoch}';
       LoggingService.logInfo('Mock OTP sent to $phoneNumber. Use code: 123456');
       return;
     }
@@ -203,8 +203,9 @@ class AuthService {
         verificationCompleted: (PhoneAuthCredential credential) async {
           // Auto-verification (Android only)
           try {
-            final UserCredential userCredential = await _auth.signInWithCredential(credential);
-            
+            final UserCredential userCredential = await _auth
+                .signInWithCredential(credential);
+
             // Check if user profile exists, if not create it
             final userExists = await this.userExists(userCredential.user!.uid);
             if (!userExists) {
@@ -215,15 +216,19 @@ class AuthService {
             } else {
               await updateLastLogin(userCredential.user!.uid);
             }
-            
-            LoggingService.logInfo('Auto-verification completed successfully for ${userCredential.user!.uid}');
+
+            LoggingService.logInfo(
+              'Auto-verification completed successfully for ${userCredential.user!.uid}',
+            );
           } catch (e) {
             LoggingService.logError('Auto-verification failed: $e');
             // Don't throw here, let user manually enter OTP
           }
         },
         verificationFailed: (FirebaseAuthException e) {
-          LoggingService.logError('Verification failed: ${e.code} - ${e.message}');
+          LoggingService.logError(
+            'Verification failed: ${e.code} - ${e.message}',
+          );
           throw e;
         },
         codeSent: (String verificationId, int? resendToken) {
@@ -233,12 +238,16 @@ class AuthService {
         },
         codeAutoRetrievalTimeout: (String verificationId) {
           _verificationId = verificationId;
-          LoggingService.logWarning('Auto-retrieval timeout, manual entry required');
+          LoggingService.logWarning(
+            'Auto-retrieval timeout, manual entry required',
+          );
         },
         timeout: const Duration(seconds: 60),
       );
     } on FirebaseAuthException catch (e) {
-      LoggingService.logError('Firebase Auth Exception in sendOTP: ${e.code} - ${e.message}');
+      LoggingService.logError(
+        'Firebase Auth Exception in sendOTP: ${e.code} - ${e.message}',
+      );
       throw FirebaseAuthException(
         code: e.code,
         message: _getErrorMessage(e.code),
@@ -250,7 +259,7 @@ class AuthService {
     if (_isTestMode) {
       if (smsCode == '123456' && _pendingPhoneNumber != null) {
         var uid = _mockDb.getUidForPhone(_pendingPhoneNumber!);
-        
+
         // If user doesn't exist, create new user
         if (uid == null) {
           uid = 'mock_${_pendingPhoneNumber!.replaceAll('+91', '')}';
@@ -293,8 +302,10 @@ class AuthService {
         smsCode: smsCode,
       );
 
-      UserCredential userCredential = await _auth.signInWithCredential(credential);
-      
+      UserCredential userCredential = await _auth.signInWithCredential(
+        credential,
+      );
+
       // Check if user profile exists, if not create it
       final userExists = await this.userExists(userCredential.user!.uid);
       if (!userExists) {
@@ -305,7 +316,7 @@ class AuthService {
       } else {
         await updateLastLogin(userCredential.user!.uid);
       }
-      
+
       return userCredential;
     } on FirebaseAuthException catch (e) {
       throw FirebaseAuthException(
@@ -394,7 +405,11 @@ class AuthService {
   }
 
   // Update user profile
-  Future<void> updateUserProfile(String uid, {String? name, String? email}) async {
+  Future<void> updateUserProfile(
+    String uid, {
+    String? name,
+    String? email,
+  }) async {
     if (_isTestMode) {
       final user = _mockDb.getUser(uid);
       if (user != null) {
@@ -465,5 +480,3 @@ class AuthService {
     _testAuthController.close();
   }
 }
-
-

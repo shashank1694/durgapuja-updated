@@ -14,10 +14,7 @@ class LanguageToggleAction extends StatelessWidget {
         return IconButton(
           icon: Text(
             isBn ? 'বাংলা' : 'EN',
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 14,
-            ),
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
           ),
           onPressed: () {
             languageService.toggleLanguage();
@@ -28,4 +25,3 @@ class LanguageToggleAction extends StatelessWidget {
     );
   }
 }
-

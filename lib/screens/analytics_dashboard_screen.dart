@@ -8,7 +8,8 @@ class AnalyticsDashboardScreen extends StatefulWidget {
   const AnalyticsDashboardScreen({Key? key}) : super(key: key);
 
   @override
-  State<AnalyticsDashboardScreen> createState() => _AnalyticsDashboardScreenState();
+  State<AnalyticsDashboardScreen> createState() =>
+      _AnalyticsDashboardScreenState();
 }
 
 class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen> {
@@ -110,7 +111,7 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen> {
               Expanded(
                 child: _buildKPICard(
                   'Total Revenue',
-                      '₹${_analyticsData['totalRevenue'].toStringAsFixed(0)}',
+                  '₹${_analyticsData['totalRevenue'].toStringAsFixed(0)}',
                   Icons.account_balance_wallet,
                   AppColors.successGreen,
                 ),
@@ -246,7 +247,10 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: List.generate(6, (index) {
                 final revenue = _analyticsData['revenueByMonth'][index] as int;
-                final maxRevenue = (_analyticsData['revenueByMonth'] as List<int>).reduce((a, b) => a > b ? a : b);
+                final maxRevenue =
+                    (_analyticsData['revenueByMonth'] as List<int>).reduce(
+                      (a, b) => a > b ? a : b,
+                    );
                 final height = (revenue / maxRevenue) * 120;
 
                 return Column(
@@ -287,7 +291,8 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen> {
   }
 
   Widget _buildPopularDesigns() {
-    final popularDesigns = _analyticsData['popularDesigns'] as List<Map<String, dynamic>>;
+    final popularDesigns =
+        _analyticsData['popularDesigns'] as List<Map<String, dynamic>>;
 
     return Container(
       padding: const EdgeInsets.all(AppConstants.mediumPadding),
@@ -317,11 +322,15 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen> {
           Column(
             children: popularDesigns.map((design) {
               return Container(
-                margin: const EdgeInsets.only(bottom: AppConstants.smallPadding),
+                margin: const EdgeInsets.only(
+                  bottom: AppConstants.smallPadding,
+                ),
                 padding: const EdgeInsets.all(AppConstants.smallPadding),
                 decoration: BoxDecoration(
                   color: AppColors.cardCream,
-                  borderRadius: BorderRadius.circular(AppConstants.borderRadius),
+                  borderRadius: BorderRadius.circular(
+                    AppConstants.borderRadius,
+                  ),
                 ),
                 child: Row(
                   children: [
@@ -352,7 +361,8 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen> {
   }
 
   Widget _buildMaterialUsage() {
-    final materials = _analyticsData['materialUsage'] as List<Map<String, dynamic>>;
+    final materials =
+        _analyticsData['materialUsage'] as List<Map<String, dynamic>>;
 
     return Container(
       padding: const EdgeInsets.all(AppConstants.mediumPadding),
@@ -382,11 +392,15 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen> {
           Column(
             children: materials.map((material) {
               final usage = material['usage'] as int;
-              final maxUsage = materials.map((m) => m['usage'] as int).reduce((a, b) => a > b ? a : b);
+              final maxUsage = materials
+                  .map((m) => m['usage'] as int)
+                  .reduce((a, b) => a > b ? a : b);
               final percentage = usage / maxUsage;
 
               return Container(
-                margin: const EdgeInsets.only(bottom: AppConstants.smallPadding),
+                margin: const EdgeInsets.only(
+                  bottom: AppConstants.smallPadding,
+                ),
                 child: Row(
                   children: [
                     SizedBox(
@@ -404,12 +418,14 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen> {
                       child: LinearProgressIndicator(
                         value: percentage,
                         backgroundColor: AppColors.cardCream,
-                        valueColor: AlwaysStoppedAnimation<Color>(material['color']),
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          material['color'],
+                        ),
                       ),
                     ),
                     const SizedBox(width: AppConstants.smallPadding),
                     Text(
-                      '${usage}%',
+                      '$usage%',
                       style: TextStyle(
                         fontSize: AppConstants.fontSizeSmall,
                         color: AppColors.textLight,
@@ -459,7 +475,7 @@ class _AnalyticsDashboardScreenState extends State<AnalyticsDashboardScreen> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  '${rating}/5.0 average rating',
+                  '$rating/5.0 average rating',
                   style: TextStyle(
                     fontSize: AppConstants.fontSizeBody,
                     color: AppColors.textLight,

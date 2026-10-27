@@ -45,9 +45,7 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
       LoggingService.logInfo('OTP sent successfully to $phoneNumber');
 
       if (mounted) {
-        context.push('/otp-verification', extra: {
-          'phoneNumber': phoneNumber,
-        });
+        context.push('/otp-verification', extra: {'phoneNumber': phoneNumber});
       }
     } catch (e) {
       LoggingService.logError('OTP send failed with error: $e');
@@ -154,7 +152,9 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                 Container(
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(AppConstants.borderRadius),
+                    borderRadius: BorderRadius.circular(
+                      AppConstants.borderRadius,
+                    ),
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black.withOpacity(0.05),
@@ -194,7 +194,9 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                     padding: const EdgeInsets.all(AppConstants.smallPadding),
                     decoration: BoxDecoration(
                       color: AppColors.errorRed.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(AppConstants.borderRadius),
+                      borderRadius: BorderRadius.circular(
+                        AppConstants.borderRadius,
+                      ),
                     ),
                     child: Row(
                       children: [

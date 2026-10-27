@@ -90,9 +90,9 @@ class _ClientDetailsScreenState extends State<ClientDetailsScreen> {
         );
         Navigator.of(context).pop(); // Go back to previous screen
       } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error deleting client: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error deleting client: $e')));
       }
     }
   }
@@ -102,8 +102,10 @@ class _ClientDetailsScreenState extends State<ClientDetailsScreen> {
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        final TextEditingController idolNameController = TextEditingController();
-        final TextEditingController requirementsController = TextEditingController();
+        final TextEditingController idolNameController =
+            TextEditingController();
+        final TextEditingController requirementsController =
+            TextEditingController();
         DateTime? selectedDate;
 
         return AlertDialog(
@@ -151,11 +153,7 @@ class _ClientDetailsScreenState extends State<ClientDetailsScreen> {
                       children: [
                         const Icon(Icons.calendar_today),
                         const SizedBox(width: 8),
-                        Text(
-                          selectedDate != null
-                              ? '${selectedDate!.day}/${selectedDate!.month}/${selectedDate!.year}'
-                              : 'Select Delivery Date',
-                        ),
+                        Text('Select Delivery Date'),
                       ],
                     ),
                   ),
@@ -221,20 +219,23 @@ class _ClientDetailsScreenState extends State<ClientDetailsScreen> {
           final banglaText = await _speechService.stopListening();
           if (mounted) setState(() {});
           if (banglaText.isNotEmpty) {
-            final englishText =
-                await _translationService.translateToEnglish(banglaText);
+            final englishText = await _translationService.translateToEnglish(
+              banglaText,
+            );
             if (mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(content: Text('Recognized: $englishText')),
               );
             }
           } else if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('No speech detected')),
-            );
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(const SnackBar(content: Text('No speech detected')));
           }
         },
-        backgroundColor: _speechService.isListening ? Colors.orange : AppColors.primaryBrown,
+        backgroundColor: _speechService.isListening
+            ? Colors.orange
+            : AppColors.primaryBrown,
         child: Icon(
           _speechService.isListening ? Icons.graphic_eq : Icons.mic,
           color: Colors.white,

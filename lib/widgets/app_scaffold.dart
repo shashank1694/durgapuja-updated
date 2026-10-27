@@ -77,8 +77,6 @@ class AppScaffold extends StatelessWidget {
     );
   }
 
-
-
   void _showVoiceBottomSheet(BuildContext context) {
     showModalBottomSheet(
       context: context,
@@ -92,42 +90,42 @@ class AppScaffold extends StatelessWidget {
         return Container(
           padding: EdgeInsets.all(pad.clamp(16.0, 28.0)),
           child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Text(
-              'Voice Recording',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-                color: AppColors.textDark,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Voice Recording',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textDark,
+                ),
               ),
-            ),
-            const SizedBox(height: 16),
-            const Text(
-              'Tap to start recording your voice note',
-              style: TextStyle(color: AppColors.textLight),
-            ),
-            const SizedBox(height: 24),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                ElevatedButton.icon(
-                  onPressed: () {},
-                  icon: const Icon(Icons.mic),
-                  label: const Text('Start Recording'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primaryBrown,
-                    foregroundColor: Colors.white,
+              const SizedBox(height: 16),
+              const Text(
+                'Tap to start recording your voice note',
+                style: TextStyle(color: AppColors.textLight),
+              ),
+              const SizedBox(height: 24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  ElevatedButton.icon(
+                    onPressed: () {},
+                    icon: const Icon(Icons.mic),
+                    label: const Text('Start Recording'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.primaryBrown,
+                      foregroundColor: Colors.white,
+                    ),
                   ),
-                ),
-                OutlinedButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('Cancel'),
-                ),
-              ],
-            ),
-          ],
-        ),
+                  OutlinedButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text('Cancel'),
+                  ),
+                ],
+              ),
+            ],
+          ),
         );
       },
     );

@@ -4,6 +4,7 @@ import '../../models/generated_image.dart';
 import '../../services/language_service.dart';
 import '../../utils/colors.dart';
 import '../../widgets/language_toggle_action.dart';
+import 'tap_to_edit_screen.dart';
 
 class ImageViewerScreen extends StatefulWidget {
   final List<GeneratedImage> images;
@@ -60,6 +61,19 @@ class _ImageViewerScreenState extends State<ImageViewerScreen> {
         centerTitle: true,
         actions: [
           const LanguageToggleAction(),
+          IconButton(
+            icon: const Icon(Icons.touch_app, color: AppColors.accentOrange),
+            tooltip: 'Tap to Edit',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) =>
+                      TapToEditScreen(image: widget.images[_currentIndex]),
+                ),
+              );
+            },
+          ),
           IconButton(
             icon: const Icon(Icons.share, color: Colors.white),
             onPressed: _shareImage,
@@ -122,7 +136,7 @@ class _ImageViewerScreenState extends State<ImageViewerScreen> {
                     child: CircularProgressIndicator(
                       value: loadingProgress.expectedTotalBytes != null
                           ? loadingProgress.cumulativeBytesLoaded /
-                              loadingProgress.expectedTotalBytes!
+                                loadingProgress.expectedTotalBytes!
                           : null,
                       color: AppColors.primaryBrown,
                     ),
@@ -177,9 +191,9 @@ class _ImageViewerScreenState extends State<ImageViewerScreen> {
   void _shareImage() {
     final image = widget.images[_currentIndex];
     // TODO: Implement share functionality
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Sharing image: ${image.prompt}')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text('Sharing image: ${image.prompt}')));
   }
 
   void _downloadImage() {

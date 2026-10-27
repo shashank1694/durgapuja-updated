@@ -14,7 +14,7 @@ class ImageToImageService {
   final String _apiToken;
 
   ImageToImageService()
-      : _apiToken = dotenv.env['KREA_API_TOKEN'] ?? ApiKeys.kreaApiKey;
+    : _apiToken = dotenv.env['KREA_API_TOKEN'] ?? ApiKeys.kreaApiKey;
 
   /// Uploads a local image to Krea assets and returns the public image URL.
   Future<String> _uploadAsset(String imagePath) async {
@@ -109,20 +109,27 @@ class ImageToImageService {
     if (_apiToken.isEmpty) throw Exception(_tokenError);
 
     try {
-      print('Starting Krea style transfer (original + reference as references)...');
+      print(
+        'Starting Krea style transfer (original + reference as references)...',
+      );
       final originalFile = File(originalImagePath);
       final referenceFile = File(referenceImagePath);
-      if (!originalFile.existsSync()) throw Exception('Original image file not found');
-      if (!referenceFile.existsSync()) throw Exception('Reference image file not found');
+      if (!originalFile.existsSync()) {
+        throw Exception('Original image file not found');
+      }
+      if (!referenceFile.existsSync()) {
+        throw Exception('Reference image file not found');
+      }
 
-      const prompt = 'Transform the first image to match the style, mood and color palette of the second reference image. '
+      const prompt =
+          'Transform the first image to match the style, mood and color palette of the second reference image. '
           'Preserve the composition and main subject of the first image. '
           'Apply the artistic style of the reference.';
 
-      final result = await KreaAIService().generateImageWithReferences(
-        prompt,
-        [originalFile, referenceFile],
-      );
+      final result = await KreaAIService().generateImageWithReferences(prompt, [
+        originalFile,
+        referenceFile,
+      ]);
       return result.url;
     } catch (e) {
       print('Error in Krea style transfer: $e');
@@ -142,21 +149,29 @@ class ImageToImageService {
     if (_apiToken.isEmpty) throw Exception(_tokenError);
 
     try {
-      print('Starting Krea style transfer with context (original + reference as references)...');
+      print(
+        'Starting Krea style transfer with context (original + reference as references)...',
+      );
       final originalFile = File(originalImagePath);
       final referenceFile = File(referenceImagePath);
-      if (!originalFile.existsSync()) throw Exception('Original image file not found');
-      if (!referenceFile.existsSync()) throw Exception('Reference image file not found');
+      if (!originalFile.existsSync()) {
+        throw Exception('Original image file not found');
+      }
+      if (!referenceFile.existsSync()) {
+        throw Exception('Reference image file not found');
+      }
 
       // Build enhanced prompt based on user input and style transfer requirements
       String enhancedPrompt;
       if (prompt.isNotEmpty) {
-        enhancedPrompt = 'Apply the style and mood from the reference image to the original image. '
+        enhancedPrompt =
+            'Apply the style and mood from the reference image to the original image. '
             'Incorporate the following user requirements: "$prompt". '
             'Preserve the composition and main subject of the original image while matching '
             'the artistic style, color palette, and mood of the reference image.';
       } else {
-        enhancedPrompt = 'Transform the original image to match the style, mood and color palette '
+        enhancedPrompt =
+            'Transform the original image to match the style, mood and color palette '
             'of the reference image. Preserve the composition and main subject of the original image. '
             'Apply the artistic style of the reference image with $styleStrength strength and $styleType style type.';
       }
@@ -231,7 +246,8 @@ class ImageToImageService {
       case 'vintage':
         return applyCreativeTransformation(
           imagePath: imagePath,
-          prompt: 'Give this image a vintage, old photograph look with sepia tones',
+          prompt:
+              'Give this image a vintage, old photograph look with sepia tones',
           transformationType: 'vintage',
         );
       case 'high_contrast':

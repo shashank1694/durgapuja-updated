@@ -23,7 +23,10 @@ class SettingsScreen extends StatelessWidget {
         elevation: 0,
         actions: [
           IconButton(
-            icon: const Icon(Icons.home_outlined, color: AppColors.primaryBrown),
+            icon: const Icon(
+              Icons.home_outlined,
+              color: AppColors.primaryBrown,
+            ),
             onPressed: () => context.go('/main'),
             tooltip: l10n.backToModuleSelection,
           ),

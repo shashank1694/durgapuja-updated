@@ -32,7 +32,10 @@ class OpenAIImageService {
   }
 
   /// Generates multiple images from a text prompt.
-  Future<List<GeneratedImage>> generateImages(String prompt, {int count = 1}) async {
+  Future<List<GeneratedImage>> generateImages(
+    String prompt, {
+    int count = 1,
+  }) async {
     if (count <= 0) {
       throw ArgumentError.value(count, 'count', 'Must be >= 1');
     }
@@ -103,7 +106,9 @@ class OpenAIImageService {
         : decoded.convert(numChannels: 4, alpha: 255);
     final pngBytes = img.encodePng(rgba);
     final tempDir = Directory.systemTemp;
-    final pngFile = File('${tempDir.path}/openai_edit_${DateTime.now().millisecondsSinceEpoch}.png');
+    final pngFile = File(
+      '${tempDir.path}/openai_edit_${DateTime.now().millisecondsSinceEpoch}.png',
+    );
     await pngFile.writeAsBytes(pngBytes);
     return pngFile;
   }
@@ -116,7 +121,9 @@ class OpenAIImageService {
     required String prompt,
   }) async {
     if (!referenceImage.existsSync()) {
-      throw Exception('Reference image not found at path: ${referenceImage.path}');
+      throw Exception(
+        'Reference image not found at path: ${referenceImage.path}',
+      );
     }
 
     File pngFile;
@@ -209,4 +216,3 @@ class OpenAIImageService {
     return Exception('$message (status ${response.statusCode}): $detail');
   }
 }
-

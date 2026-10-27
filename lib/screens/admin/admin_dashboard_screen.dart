@@ -26,17 +26,31 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   Future<void> _loadStats() async {
     try {
       // Get user statistics
-      final usersQuery = await FirebaseFirestore.instance.collection('users').get();
+      final usersQuery = await FirebaseFirestore.instance
+          .collection('users')
+          .get();
       final totalUsers = usersQuery.docs.length;
-      final adminUsers = usersQuery.docs.where((doc) => doc.data()['role'] == 'admin').length;
-      final idolMakerUsers = usersQuery.docs.where((doc) => doc.data()['role'] == 'idol_maker').length;
-      final regularUsers = usersQuery.docs.where((doc) => doc.data()['role'] == 'user').length;
+      final adminUsers = usersQuery.docs
+          .where((doc) => doc.data()['role'] == 'admin')
+          .length;
+      final idolMakerUsers = usersQuery.docs
+          .where((doc) => doc.data()['role'] == 'idol_maker')
+          .length;
+      final regularUsers = usersQuery.docs
+          .where((doc) => doc.data()['role'] == 'user')
+          .length;
 
       // Get orders statistics
-      final ordersQuery = await FirebaseFirestore.instance.collectionGroup('orders').get();
+      final ordersQuery = await FirebaseFirestore.instance
+          .collectionGroup('orders')
+          .get();
       final totalOrders = ordersQuery.docs.length;
-      final pendingOrders = ordersQuery.docs.where((doc) => doc.data()['status'] == 'pending').length;
-      final completedOrders = ordersQuery.docs.where((doc) => doc.data()['status'] == 'completed').length;
+      final pendingOrders = ordersQuery.docs
+          .where((doc) => doc.data()['status'] == 'pending')
+          .length;
+      final completedOrders = ordersQuery.docs
+          .where((doc) => doc.data()['status'] == 'completed')
+          .length;
 
       setState(() {
         _stats = {
@@ -100,9 +114,14 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                       gradient: LinearGradient(
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
-                        colors: [AppColors.primaryBrown, AppColors.secondaryBrown],
+                        colors: [
+                          AppColors.primaryBrown,
+                          AppColors.secondaryBrown,
+                        ],
                       ),
-                      borderRadius: BorderRadius.circular(AppConstants.borderRadius),
+                      borderRadius: BorderRadius.circular(
+                        AppConstants.borderRadius,
+                      ),
                     ),
                     child: Row(
                       children: [
@@ -296,7 +315,13 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     );
   }
 
-  Widget _buildStatCard(String title, String value, IconData icon, Color color, {bool isFullWidth = false}) {
+  Widget _buildStatCard(
+    String title,
+    String value,
+    IconData icon,
+    Color color, {
+    bool isFullWidth = false,
+  }) {
     return Container(
       width: isFullWidth ? double.infinity : null,
       padding: const EdgeInsets.all(AppConstants.mediumPadding),
@@ -310,10 +335,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             offset: const Offset(0, 2),
           ),
         ],
-        border: Border.all(
-          color: color.withOpacity(0.2),
-          width: 1,
-        ),
+        border: Border.all(color: color.withOpacity(0.2), width: 1),
       ),
       child: Column(
         children: [
@@ -341,7 +363,12 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     );
   }
 
-  Widget _buildActionCard(String title, String subtitle, IconData icon, VoidCallback onTap) {
+  Widget _buildActionCard(
+    String title,
+    String subtitle,
+    IconData icon,
+    VoidCallback onTap,
+  ) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -365,11 +392,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                 color: AppColors.primaryBrown.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(AppConstants.borderRadius),
               ),
-              child: Icon(
-                icon,
-                color: AppColors.primaryBrown,
-                size: 24,
-              ),
+              child: Icon(icon, color: AppColors.primaryBrown, size: 24),
             ),
             const SizedBox(width: AppConstants.mediumPadding),
             Expanded(

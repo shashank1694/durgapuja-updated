@@ -109,45 +109,41 @@ class _AiLogsScreenState extends State<AiLogsScreen> {
         body: _loading
             ? const Center(child: CircularProgressIndicator())
             : _logs.isEmpty
-                ? Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(24),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.history,
-                            size: 64,
-                            color: AppColors.textLight,
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            'No AI transactions yet',
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: AppColors.textLight,
-                            ),
-                          ),
-                        ],
+            ? Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.history, size: 64, color: AppColors.textLight),
+                      const SizedBox(height: 16),
+                      Text(
+                        'No AI transactions yet',
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: AppColors.textLight,
+                        ),
                       ),
-                    ),
-                  )
-                : ListView.builder(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 12,
-                    ),
-                    itemCount: _logs.length,
-                    itemBuilder: (context, index) {
-                      return _AiLogCard(
-                        log: _logs[index],
-                        formatTimestamp: _formatTimestamp,
-                        formatAmount: _formatAmount,
-                        prettyJson: _prettyJson,
-                        onDelete: _deleteLog,
-                      );
-                    },
+                    ],
                   ),
+                ),
+              )
+            : ListView.builder(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
+                itemCount: _logs.length,
+                itemBuilder: (context, index) {
+                  return _AiLogCard(
+                    log: _logs[index],
+                    formatTimestamp: _formatTimestamp,
+                    formatAmount: _formatAmount,
+                    prettyJson: _prettyJson,
+                    onDelete: _deleteLog,
+                  );
+                },
+              ),
       ),
     );
   }
@@ -187,9 +183,7 @@ class _AiLogCardState extends State<_AiLogCard> {
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [

@@ -1,16 +1,12 @@
 import 'package:flutter/material.dart';
 import '../utils/colors.dart';
 import '../utils/constants.dart';
-import '../services/logging_service.dart';
 
 class NavItem {
   final IconData icon;
   final String label;
 
-  const NavItem({
-    required this.icon,
-    required this.label,
-  });
+  const NavItem({required this.icon, required this.label});
 }
 
 class DynamicIslandNav extends StatelessWidget {
@@ -29,13 +25,15 @@ class DynamicIslandNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final items = navItems ?? [
-      const NavItem(icon: Icons.home_outlined, label: 'Home'),
-      const NavItem(icon: Icons.palette_outlined, label: 'Design'),
-      const NavItem(icon: Icons.shopping_bag_outlined, label: 'Orders'),
-      const NavItem(icon: Icons.wallet_outlined, label: 'Finance'),
-      const NavItem(icon: Icons.bar_chart_outlined, label: 'Reports'),
-    ];
+    final items =
+        navItems ??
+        [
+          const NavItem(icon: Icons.home_outlined, label: 'Home'),
+          const NavItem(icon: Icons.palette_outlined, label: 'Design'),
+          const NavItem(icon: Icons.shopping_bag_outlined, label: 'Orders'),
+          const NavItem(icon: Icons.wallet_outlined, label: 'Finance'),
+          const NavItem(icon: Icons.bar_chart_outlined, label: 'Reports'),
+        ];
 
     return Positioned(
       bottom: 0,

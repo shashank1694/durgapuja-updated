@@ -14,10 +14,10 @@ import 'services/language_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   // Initialize logging service
   LoggingService.initialize();
-  
+
   // Load environment variables
   try {
     await dotenv.load(fileName: ".env");
@@ -77,10 +77,7 @@ class MyApp extends StatelessWidget {
             scaffoldBackgroundColor: AppColors.backgroundCream,
           ),
           locale: isBn ? const Locale('bn') : const Locale('en'),
-          supportedLocales: const [
-            Locale('en'),
-            Locale('bn'),
-          ],
+          supportedLocales: const [Locale('en'), Locale('bn')],
           localizationsDelegates: const [
             AppLocalizations.delegate,
             GlobalMaterialLocalizations.delegate,
@@ -94,4 +91,3 @@ class MyApp extends StatelessWidget {
     );
   }
 }
-

@@ -1,23 +1,24 @@
 import 'package:cloud_firestore/cloud_firestore.dart' as firestore;
 import '../models/client.dart';
-import '../models/transaction.dart' as models; // Avoid naming conflict with Firestore Transaction
+import '../models/transaction.dart'
+    as models; // Avoid naming conflict with Firestore Transaction
 
 class FirestoreService {
-  final firestore.FirebaseFirestore _firestore = 
+  final firestore.FirebaseFirestore _firestore =
       firestore.FirebaseFirestore.instance;
 
   // Collection references
-  firestore.CollectionReference get _clientsCollection => 
+  firestore.CollectionReference get _clientsCollection =>
       _firestore.collection('clients');
-  
-  firestore.CollectionReference get _transactionsCollection => 
+
+  firestore.CollectionReference get _transactionsCollection =>
       _firestore.collection('transactions');
-  
-  firestore.CollectionReference get _materialsCollection => 
+
+  firestore.CollectionReference get _materialsCollection =>
       _firestore.collection('materials');
 
   // ==================== CLIENT OPERATIONS ====================
-  
+
   Future<void> addClient(Client client) async {
     try {
       await _clientsCollection.doc(client.id).set(client.toMap());
@@ -77,7 +78,7 @@ class FirestoreService {
   }) async {
     try {
       var query = _clientsCollection.limit(limit);
-      
+
       if (startAfter != null) {
         // ignore: unnecessary_cast
         query = query.startAfterDocument(startAfter) as firestore.Query;
@@ -100,7 +101,7 @@ class FirestoreService {
           .where('name', isGreaterThanOrEqualTo: searchTerm)
           .where('name', isLessThanOrEqualTo: '$searchTerm\uf8ff')
           .get();
-      
+
       return querySnapshot.docs
           .map((doc) => Client.fromMap(doc.data() as Map<String, dynamic>))
           .toList();
@@ -111,7 +112,7 @@ class FirestoreService {
   }
 
   // ==================== TRANSACTION OPERATIONS ====================
-  
+
   Future<void> addTransaction(models.Transaction transaction) async {
     try {
       await _transactionsCollection
@@ -130,8 +131,10 @@ class FirestoreService {
           .get();
 
       return querySnapshot.docs
-          .map((doc) => models.Transaction.fromMap(
-              doc.data() as Map<String, dynamic>))
+          .map(
+            (doc) =>
+                models.Transaction.fromMap(doc.data() as Map<String, dynamic>),
+          )
           .toList();
     } catch (e) {
       print('Error getting transactions: $e');
@@ -144,7 +147,8 @@ class FirestoreService {
       final docSnapshot = await _transactionsCollection.doc(id).get();
       if (docSnapshot.exists && docSnapshot.data() != null) {
         return models.Transaction.fromMap(
-            docSnapshot.data() as Map<String, dynamic>);
+          docSnapshot.data() as Map<String, dynamic>,
+        );
       }
       return null;
     } catch (e) {
@@ -175,7 +179,8 @@ class FirestoreService {
 
   // Get transactions for a specific client
   Future<List<models.Transaction>> getTransactionsByClient(
-      String clientId) async {
+    String clientId,
+  ) async {
     try {
       final querySnapshot = await _transactionsCollection
           .where('clientId', isEqualTo: clientId)
@@ -183,8 +188,10 @@ class FirestoreService {
           .get();
 
       return querySnapshot.docs
-          .map((doc) => models.Transaction.fromMap(
-              doc.data() as Map<String, dynamic>))
+          .map(
+            (doc) =>
+                models.Transaction.fromMap(doc.data() as Map<String, dynamic>),
+          )
           .toList();
     } catch (e) {
       print('Error getting transactions by client: $e');
@@ -205,8 +212,10 @@ class FirestoreService {
           .get();
 
       return querySnapshot.docs
-          .map((doc) => models.Transaction.fromMap(
-              doc.data() as Map<String, dynamic>))
+          .map(
+            (doc) =>
+                models.Transaction.fromMap(doc.data() as Map<String, dynamic>),
+          )
           .toList();
     } catch (e) {
       print('Error getting transactions by date range: $e');
@@ -232,7 +241,10 @@ class FirestoreService {
           .get();
 
       return querySnapshot.docs
-          .map((doc) => models.MaterialRate.fromMap(doc.data() as Map<String, dynamic>))
+          .map(
+            (doc) =>
+                models.MaterialRate.fromMap(doc.data() as Map<String, dynamic>),
+          )
           .toList();
     } catch (e) {
       print('Error getting materials: $e');
@@ -244,7 +256,9 @@ class FirestoreService {
     try {
       final docSnapshot = await _materialsCollection.doc(id).get();
       if (docSnapshot.exists && docSnapshot.data() != null) {
-        return models.MaterialRate.fromMap(docSnapshot.data() as Map<String, dynamic>);
+        return models.MaterialRate.fromMap(
+          docSnapshot.data() as Map<String, dynamic>,
+        );
       }
       return null;
     } catch (e) {
@@ -280,7 +294,10 @@ class FirestoreService {
           .get();
 
       return querySnapshot.docs
-          .map((doc) => models.MaterialRate.fromMap(doc.data() as Map<String, dynamic>))
+          .map(
+            (doc) =>
+                models.MaterialRate.fromMap(doc.data() as Map<String, dynamic>),
+          )
           .toList();
     } catch (e) {
       print('Error getting active materials: $e');
@@ -306,18 +323,27 @@ class FirestoreService {
         .snapshots()
         .map(
           (snapshot) => snapshot.docs
-              .map((doc) => models.Transaction.fromMap(
-                  doc.data() as Map<String, dynamic>))
+              .map(
+                (doc) => models.Transaction.fromMap(
+                  doc.data() as Map<String, dynamic>,
+                ),
+              )
               .toList(),
         );
   }
 
   // Listen to real-time material updates
   Stream<List<models.MaterialRate>> materialsStream() {
-    return _materialsCollection.orderBy('materialName').snapshots().map(
+    return _materialsCollection
+        .orderBy('materialName')
+        .snapshots()
+        .map(
           (snapshot) => snapshot.docs
-              .map((doc) =>
-                  models.MaterialRate.fromMap(doc.data() as Map<String, dynamic>))
+              .map(
+                (doc) => models.MaterialRate.fromMap(
+                  doc.data() as Map<String, dynamic>,
+                ),
+              )
               .toList(),
         );
   }
@@ -325,23 +351,23 @@ class FirestoreService {
   // Batch operations
   Future<void> addMultipleClients(List<Client> clients) async {
     final batch = _firestore.batch();
-    
+
     for (var client in clients) {
       final docRef = _clientsCollection.doc(client.id);
       batch.set(docRef, client.toMap());
     }
-    
+
     await batch.commit();
   }
 
   Future<void> deleteMultipleTransactions(List<String> transactionIds) async {
     final batch = _firestore.batch();
-    
+
     for (var id in transactionIds) {
       final docRef = _transactionsCollection.doc(id);
       batch.delete(docRef);
     }
-    
+
     await batch.commit();
   }
 }

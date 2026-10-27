@@ -33,25 +33,29 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   final List<OnboardingItem> _onboardingItems = [
     const OnboardingItem(
       title: 'Welcome to ShilpiBondhu',
-      description: 'Create beautiful custom Durga idols with AI-powered design tools and manage your business efficiently.',
+      description:
+          'Create beautiful custom Durga idols with AI-powered design tools and manage your business efficiently.',
       icon: Icons.palette_outlined,
       imagePath: 'assets/images/onboarding_1.png',
     ),
     const OnboardingItem(
       title: 'Design Like a Pro',
-      description: 'Use our advanced design tools to create unique idol concepts, from traditional to modern styles.',
+      description:
+          'Use our advanced design tools to create unique idol concepts, from traditional to modern styles.',
       icon: Icons.design_services,
       imagePath: 'assets/images/onboarding_2.png',
     ),
     const OnboardingItem(
       title: 'Manage Your Business',
-      description: 'Track orders, manage clients, monitor materials, and handle payments all in one place.',
+      description:
+          'Track orders, manage clients, monitor materials, and handle payments all in one place.',
       icon: Icons.business_center,
       imagePath: 'assets/images/onboarding_3.png',
     ),
     const OnboardingItem(
       title: 'Work Anywhere',
-      description: 'Access your work offline and sync when connected. Your data is always safe and available.',
+      description:
+          'Access your work offline and sync when connected. Your data is always safe and available.',
       icon: Icons.cloud_sync,
       imagePath: 'assets/images/onboarding_4.png',
     ),
@@ -78,7 +82,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
       backgroundColor: AppColors.backgroundCream,
       body: SafeArea(
@@ -152,7 +155,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                               );
                             },
                             style: OutlinedButton.styleFrom(
-                              side: const BorderSide(color: AppColors.primaryBrown),
+                              side: const BorderSide(
+                                color: AppColors.primaryBrown,
+                              ),
                               padding: const EdgeInsets.symmetric(vertical: 16),
                             ),
                             child: const Text('Previous'),
@@ -195,7 +200,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   Widget _buildOnboardingPage(OnboardingItem item) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppConstants.defaultPadding),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppConstants.defaultPadding,
+      ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
@@ -207,11 +214,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               color: AppColors.primaryBrown.withOpacity(0.1),
               shape: BoxShape.circle,
             ),
-            child: Icon(
-              item.icon,
-              size: 80,
-              color: AppColors.primaryBrown,
-            ),
+            child: Icon(item.icon, size: 80, color: AppColors.primaryBrown),
           ),
 
           const SizedBox(height: AppConstants.largePadding),

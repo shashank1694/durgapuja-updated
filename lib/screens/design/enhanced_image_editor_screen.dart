@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
@@ -11,6 +10,7 @@ import '../../services/image_to_image_service.dart';
 import '../../services/concepts_store_service.dart';
 import '../../services/language_service.dart';
 import '../../widgets/language_toggle_action.dart';
+import 'tap_to_edit_screen.dart';
 
 class EnhancedImageEditorScreen extends StatefulWidget {
   final GeneratedImage generatedImage;
@@ -37,8 +37,6 @@ class _EnhancedImageEditorScreenState extends State<EnhancedImageEditorScreen>
   File? _editReferenceImage;
   File? _tempDownloadedImage;
   bool _isProcessing = false;
-  double _imageWidth = 0;
-  double _imageHeight = 0;
 
   late AnimationController _pulseController;
   late Animation<double> _pulseAnimation;
@@ -47,13 +45,12 @@ class _EnhancedImageEditorScreenState extends State<EnhancedImageEditorScreen>
   void initState() {
     super.initState();
     _downloadToTemp();
-    _loadImageDimensions();
-    
+
     _pulseController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1500),
     )..repeat(reverse: true);
-    
+
     _pulseAnimation = Tween<double>(begin: 0.95, end: 1.05).animate(
       CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
     );
@@ -65,17 +62,6 @@ class _EnhancedImageEditorScreenState extends State<EnhancedImageEditorScreen>
     _editPromptController.dispose();
     _tempDownloadedImage?.deleteSync();
     super.dispose();
-  }
-
-  Future<void> _loadImageDimensions() async {
-    final response = await http.get(Uri.parse(widget.generatedImage.url));
-    final bytes = response.bodyBytes;
-    final codec = await ui.instantiateImageCodec(bytes);
-    final frame = await codec.getNextFrame();
-    setState(() {
-      _imageWidth = frame.image.width.toDouble();
-      _imageHeight = frame.image.height.toDouble();
-    });
   }
 
   Future<void> _downloadToTemp() async {
@@ -121,16 +107,31 @@ class _EnhancedImageEditorScreenState extends State<EnhancedImageEditorScreen>
   }
 
   Future<void> _applyEdit() async {
-    if (_editPromptController.text.trim().isEmpty && _editReferenceImage == null) {
+    if (_editPromptController.text.trim().isEmpty &&
+        _editReferenceImage == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(Provider.of<LanguageService>(context, listen: false).getText('enter_prompt_or_reference'))),
+        SnackBar(
+          content: Text(
+            Provider.of<LanguageService>(
+              context,
+              listen: false,
+            ).getText('enter_prompt_or_reference'),
+          ),
+        ),
       );
       return;
     }
 
     if (_tempDownloadedImage == null || !_tempDownloadedImage!.existsSync()) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(Provider.of<LanguageService>(context, listen: false).getText('image_not_ready'))),
+        SnackBar(
+          content: Text(
+            Provider.of<LanguageService>(
+              context,
+              listen: false,
+            ).getText('image_not_ready'),
+          ),
+        ),
       );
       return;
     }
@@ -230,8 +231,8 @@ class _EnhancedImageEditorScreenState extends State<EnhancedImageEditorScreen>
         id: widget.generatedImage.id,
         title: widget.generatedImage.prompt.isNotEmpty
             ? widget.generatedImage.prompt.length > 40
-                ? '${widget.generatedImage.prompt.substring(0, 40)}...'
-                : widget.generatedImage.prompt
+                  ? '${widget.generatedImage.prompt.substring(0, 40)}...'
+                  : widget.generatedImage.prompt
             : 'Durga Design ${DateTime.now().day}/${DateTime.now().month}',
         imageUrl: widget.generatedImage.url,
       );
@@ -239,7 +240,12 @@ class _EnhancedImageEditorScreenState extends State<EnhancedImageEditorScreen>
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(Provider.of<LanguageService>(context, listen: false).getText('saved_to_my_concepts')),
+            content: Text(
+              Provider.of<LanguageService>(
+                context,
+                listen: false,
+              ).getText('saved_to_my_concepts'),
+            ),
             behavior: SnackBarBehavior.floating,
           ),
         );
@@ -276,6 +282,19 @@ class _EnhancedImageEditorScreenState extends State<EnhancedImageEditorScreen>
         title: Text(lang.getText('your_design')),
         actions: [
           const LanguageToggleAction(),
+          IconButton(
+            icon: const Icon(Icons.touch_app, color: Color(0xFFFF6B35)),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) =>
+                      TapToEditScreen(image: widget.generatedImage),
+                ),
+              );
+            },
+            tooltip: 'Tap to Edit Element',
+          ),
           IconButton(
             icon: const Icon(Icons.bookmark_add_outlined),
             onPressed: _saveToMyConcepts,
@@ -441,6 +460,35 @@ class _EnhancedImageEditorScreenState extends State<EnhancedImageEditorScreen>
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              const SizedBox(height: 12),
+
+              // Tap to Edit Element Button
+              OutlinedButton.icon(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          TapToEditScreen(image: widget.generatedImage),
+                    ),
+                  );
+                },
+                icon: const Icon(Icons.touch_app, color: Color(0xFFFF6B35)),
+                label: const Text(
+                  'Tap-to-Edit Specific Element',
+                  style: TextStyle(
+                    color: Color(0xFFFF6B35),
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                style: OutlinedButton.styleFrom(
+                  side: const BorderSide(color: Color(0xFFFF6B35), width: 1.5),
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
                   ),
                 ),
               ),

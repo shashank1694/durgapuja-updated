@@ -60,8 +60,25 @@ class ReplicateSAMService {
     final normalizedY = (y / imageHeight).clamp(0.0, 1.0);
     return _runMaskPrediction(
       imageUrl: imageUrl,
-      points: [[normalizedX, normalizedY]],
+      points: [
+        [normalizedX, normalizedY],
+      ],
     );
+  }
+
+  /// Prepare image url: if it is a local file, convert to data URI
+  Future<String> _prepareImageUrl(String imagePathOrUrl) async {
+    if (imagePathOrUrl.startsWith('http://') ||
+        imagePathOrUrl.startsWith('https://') ||
+        imagePathOrUrl.startsWith('data:')) {
+      return imagePathOrUrl;
+    }
+    final file = File(imagePathOrUrl);
+    if (await file.exists()) {
+      final bytes = await file.readAsBytes();
+      return 'data:image/jpeg;base64,${base64Encode(bytes)}';
+    }
+    return imagePathOrUrl;
   }
 
   Future<String> _runMaskPrediction({
@@ -69,6 +86,7 @@ class ReplicateSAMService {
     required List<List<double>> points,
   }) async {
     try {
+      final effectiveImageUrl = await _prepareImageUrl(imageUrl);
       final pointLabels = List<int>.filled(points.length, 1);
 
       final response = await http.post(
@@ -81,7 +99,7 @@ class ReplicateSAMService {
         body: jsonEncode({
           'version': _sam2Version,
           'input': {
-            'image': imageUrl,
+            'image': effectiveImageUrl,
             'points': points,
             'point_labels': pointLabels,
             'box': null,
@@ -95,7 +113,7 @@ class ReplicateSAMService {
       if (response.statusCode == 201) {
         final data = jsonDecode(response.body);
         final predictionId = data['id'];
-        
+
         // Poll for completion
         return await _pollForCompletion(predictionId);
       } else {
@@ -103,12 +121,17 @@ class ReplicateSAMService {
         String msg = 'Failed to generate mask (${response.statusCode})';
         if (body.trim().toLowerCase().startsWith('<!doctype') ||
             body.trim().toLowerCase().startsWith('<html')) {
-          msg = 'Segment service returned an error. Check your Replicate API key and image URL.';
+          msg =
+              'Segment service returned an error. Check your Replicate API key and image URL.';
         } else if (body.isNotEmpty && body.length < 300) {
           try {
             final err = jsonDecode(body);
-            if (err is Map && (err['detail'] != null || err['message'] != null)) {
-              msg = err['detail']?.toString() ?? err['message']?.toString() ?? msg;
+            if (err is Map &&
+                (err['detail'] != null || err['message'] != null)) {
+              msg =
+                  err['detail']?.toString() ??
+                  err['message']?.toString() ??
+                  msg;
             }
           } catch (_) {}
         }
@@ -120,10 +143,40 @@ class ReplicateSAMService {
     }
   }
 
+  String _extractMaskUrl(dynamic output) {
+    if (output == null) throw Exception('No mask output received');
+    if (output is String && output.isNotEmpty) return output;
+    if (output is List && output.isNotEmpty) {
+      final first = output.first;
+      if (first is String) return first;
+      if (first is Map && first['mask'] != null) {
+        return first['mask'].toString();
+      }
+      return first.toString();
+    }
+    if (output is Map) {
+      if (output['combined_mask'] != null) {
+        return output['combined_mask'].toString();
+      }
+      if (output['mask'] != null) return output['mask'].toString();
+      if (output['individual_masks'] is List &&
+          (output['individual_masks'] as List).isNotEmpty) {
+        return (output['individual_masks'] as List).first.toString();
+      }
+      for (final val in output.values) {
+        if (val is String &&
+            (val.startsWith('http://') || val.startsWith('https://'))) {
+          return val;
+        }
+      }
+    }
+    throw Exception('Unrecognized mask output format: $output');
+  }
+
   /// Poll for prediction completion
   Future<String> _pollForCompletion(String predictionId) async {
     final Uri uri = Uri.parse('$_baseUrl/predictions/$predictionId');
-    
+
     while (true) {
       final response = await http.get(
         uri,
@@ -139,22 +192,20 @@ class ReplicateSAMService {
         final status = data['status'];
 
         if (status == 'succeeded') {
-          final output = data['output'];
-          if (output != null && output is List && output.isNotEmpty) {
-            return output[0]; // Return mask image URL
-          } else {
-            throw Exception('No mask output received');
-          }
+          return _extractMaskUrl(data['output']);
         } else if (status == 'failed' || status == 'canceled') {
-          throw Exception('Prediction failed or was canceled');
+          final error = data['error'] ?? 'Prediction failed or was canceled';
+          throw Exception('Prediction failed: $error');
         }
         // Continue polling if pending
       } else {
-        throw Exception('Failed to check prediction status: ${response.statusCode}');
+        throw Exception(
+          'Failed to check prediction status: ${response.statusCode}',
+        );
       }
 
       // Wait before polling again
-      await Future.delayed(const Duration(seconds: 2));
+      await Future.delayed(const Duration(milliseconds: 1500));
     }
   }
 
@@ -182,7 +233,9 @@ class ReplicateSAMService {
           'version': 'lucataco/segment-anything-2', // Alternative SAM 2 model
           'input': {
             'image': imageUrl,
-            'points': [[normalizedX, normalizedY]],
+            'points': [
+              [normalizedX, normalizedY],
+            ],
             'point_labels': [1],
           },
         }),
@@ -191,7 +244,7 @@ class ReplicateSAMService {
       if (response.statusCode == 201) {
         final data = jsonDecode(response.body);
         final predictionId = data['id'];
-        
+
         return await _pollForCompletion(predictionId);
       } else {
         throw Exception('Failed to generate mask: ${response.statusCode}');

@@ -33,16 +33,16 @@ class _SignInScreenState extends State<SignInScreen> {
       _errorMessage = null;
     });
 
-      try {
-        final authProvider = context.read<AuthProvider>();
-        final phoneNumber = '+91${_phoneController.text.trim()}';
+    try {
+      final authProvider = context.read<AuthProvider>();
+      final phoneNumber = '+91${_phoneController.text.trim()}';
 
-        await authProvider.signInWithPhone(phoneNumber);
+      await authProvider.signInWithPhone(phoneNumber);
 
-        if (mounted) {
-          // Navigate directly to home dashboard after successful sign in
-          context.push('/home');
-        }
+      if (mounted) {
+        // Navigate directly to home dashboard after successful sign in
+        context.push('/home');
+      }
     } catch (e) {
       setState(() {
         _errorMessage = _getErrorMessage(e);
@@ -85,8 +85,6 @@ class _SignInScreenState extends State<SignInScreen> {
     }
     return null;
   }
-
-
 
   @override
   Widget build(BuildContext context) {
@@ -148,7 +146,9 @@ class _SignInScreenState extends State<SignInScreen> {
                 Container(
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(AppConstants.borderRadius),
+                    borderRadius: BorderRadius.circular(
+                      AppConstants.borderRadius,
+                    ),
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black.withOpacity(0.05),
@@ -173,8 +173,6 @@ class _SignInScreenState extends State<SignInScreen> {
                   ),
                 ),
 
-
-
                 // Error Message
                 if (_errorMessage != null) ...[
                   const SizedBox(height: AppConstants.mediumPadding),
@@ -182,7 +180,9 @@ class _SignInScreenState extends State<SignInScreen> {
                     padding: const EdgeInsets.all(AppConstants.smallPadding),
                     decoration: BoxDecoration(
                       color: AppColors.errorRed.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(AppConstants.borderRadius),
+                      borderRadius: BorderRadius.circular(
+                        AppConstants.borderRadius,
+                      ),
                     ),
                     child: Row(
                       children: [

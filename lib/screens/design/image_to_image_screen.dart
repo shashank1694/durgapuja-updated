@@ -20,33 +20,34 @@ class ImageToImageScreen extends StatefulWidget {
   State<ImageToImageScreen> createState() => _ImageToImageScreenState();
 }
 
-class _ImageToImageScreenState extends State<ImageToImageScreen> with SingleTickerProviderStateMixin {
+class _ImageToImageScreenState extends State<ImageToImageScreen>
+    with SingleTickerProviderStateMixin {
   final ImageToImageService _imageToImageService = ImageToImageService();
   final ImagePicker _imagePicker = ImagePicker();
-  
+
   final TextEditingController _promptController = TextEditingController();
   final stt.SpeechToText _speechToText = stt.SpeechToText();
-  
+
   XFile? _originalImage;
   XFile? _referenceImage;
   bool _isListening = false;
   bool _isProcessing = false;
-  
+
   late AnimationController _pulseController;
   late Animation<double> _pulseAnimation;
-  
+
   String _enhancementMode = 'enhance';
 
   @override
   void initState() {
     super.initState();
     _initializeSpeech();
-    
+
     _pulseController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1000),
     )..repeat(reverse: true);
-    
+
     _pulseAnimation = Tween<double>(begin: 1.0, end: 1.2).animate(
       CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
     );
@@ -115,7 +116,14 @@ class _ImageToImageScreenState extends State<ImageToImageScreen> with SingleTick
   Future<void> _processImageToImage() async {
     if (_originalImage == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(Provider.of<LanguageService>(context, listen: false).getText('please_select_original_image'))),
+        SnackBar(
+          content: Text(
+            Provider.of<LanguageService>(
+              context,
+              listen: false,
+            ).getText('please_select_original_image'),
+          ),
+        ),
       );
       return;
     }
@@ -142,11 +150,18 @@ class _ImageToImageScreenState extends State<ImageToImageScreen> with SingleTick
         // Style transfer
         if (_referenceImage == null) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(Provider.of<LanguageService>(context, listen: false).getText('please_select_reference_style'))),
+            SnackBar(
+              content: Text(
+                Provider.of<LanguageService>(
+                  context,
+                  listen: false,
+                ).getText('please_select_reference_style'),
+              ),
+            ),
           );
           return;
         }
-        
+
         final resultUrl = await _imageToImageService.applyStyleTransfer(
           originalImagePath: _originalImage!.path,
           referenceImagePath: _referenceImage!.path,
@@ -161,11 +176,12 @@ class _ImageToImageScreenState extends State<ImageToImageScreen> with SingleTick
         );
       } else {
         // Creative transformation
-        final resultUrl = await _imageToImageService.applyCreativeTransformation(
-          imagePath: _originalImage!.path,
-          prompt: _promptController.text.trim(),
-          transformationType: 'creative',
-        );
+        final resultUrl = await _imageToImageService
+            .applyCreativeTransformation(
+              imagePath: _originalImage!.path,
+              prompt: _promptController.text.trim(),
+              transformationType: 'creative',
+            );
         resultImage = GeneratedImage(
           id: 'creative_${DateTime.now().millisecondsSinceEpoch}',
           url: resultUrl,
@@ -189,7 +205,10 @@ class _ImageToImageScreenState extends State<ImageToImageScreen> with SingleTick
       if (mounted) {
         final msg = _sanitizeErrorMessage(e);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Processing failed: $msg'), duration: const Duration(seconds: 5)),
+          SnackBar(
+            content: Text('Processing failed: $msg'),
+            duration: const Duration(seconds: 5),
+          ),
         );
       }
     } finally {
@@ -202,7 +221,9 @@ class _ImageToImageScreenState extends State<ImageToImageScreen> with SingleTick
   /// Never show raw HTML or huge error dumps to the user.
   String _sanitizeErrorMessage(Object e) {
     final s = e.toString();
-    if (s.contains('<html') || s.contains('<!doctype') || s.contains('<title')) {
+    if (s.contains('<html') ||
+        s.contains('<!doctype') ||
+        s.contains('<title')) {
       return 'Server returned an error. Check your API key and try again.';
     }
     if (s.length > 200) return '${s.substring(0, 197)}...';
@@ -212,7 +233,14 @@ class _ImageToImageScreenState extends State<ImageToImageScreen> with SingleTick
   Future<void> _applyQuickEnhancement(String enhancementType) async {
     if (_originalImage == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(Provider.of<LanguageService>(context, listen: false).getText('please_select_original_image'))),
+        SnackBar(
+          content: Text(
+            Provider.of<LanguageService>(
+              context,
+              listen: false,
+            ).getText('please_select_original_image'),
+          ),
+        ),
       );
       return;
     }
@@ -246,7 +274,10 @@ class _ImageToImageScreenState extends State<ImageToImageScreen> with SingleTick
       if (mounted) {
         final msg = _sanitizeErrorMessage(e);
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Enhancement failed: $msg'), duration: const Duration(seconds: 5)),
+          SnackBar(
+            content: Text('Enhancement failed: $msg'),
+            duration: const Duration(seconds: 5),
+          ),
         );
       }
     } finally {
@@ -270,40 +301,40 @@ class _ImageToImageScreenState extends State<ImageToImageScreen> with SingleTick
           ),
           title: Text(lang.getText('image_to_image_gen')),
           actions: [
-          const LanguageToggleAction(),
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: () {
-              setState(() {
-                _originalImage = null;
-                _referenceImage = null;
-                _promptController.clear();
-              });
-            },
-          ),
-        ],
-      ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(AppConstants.defaultPadding),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _buildImageSelectionSection(lang),
-              const SizedBox(height: AppConstants.mediumPadding),
-              _buildEnhancementModeSection(lang),
-              const SizedBox(height: AppConstants.mediumPadding),
-              _buildPromptSection(lang),
-              const SizedBox(height: AppConstants.mediumPadding),
-              _buildQuickEnhancementsSection(),
-              const SizedBox(height: AppConstants.mediumPadding),
-              _buildProcessButton(lang),
-              const SizedBox(height: AppConstants.mediumPadding),
-              _buildBottomSpacerSection(lang),
-            ],
+            const LanguageToggleAction(),
+            IconButton(
+              icon: const Icon(Icons.refresh),
+              onPressed: () {
+                setState(() {
+                  _originalImage = null;
+                  _referenceImage = null;
+                  _promptController.clear();
+                });
+              },
+            ),
+          ],
+        ),
+        body: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(AppConstants.defaultPadding),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _buildImageSelectionSection(lang),
+                const SizedBox(height: AppConstants.mediumPadding),
+                _buildEnhancementModeSection(lang),
+                const SizedBox(height: AppConstants.mediumPadding),
+                _buildPromptSection(lang),
+                const SizedBox(height: AppConstants.mediumPadding),
+                _buildQuickEnhancementsSection(),
+                const SizedBox(height: AppConstants.mediumPadding),
+                _buildProcessButton(lang),
+                const SizedBox(height: AppConstants.mediumPadding),
+                _buildBottomSpacerSection(lang),
+              ],
+            ),
           ),
         ),
-      ),
       ),
     );
   }
@@ -340,7 +371,7 @@ class _ImageToImageScreenState extends State<ImageToImageScreen> with SingleTick
               ),
             ),
             const SizedBox(height: AppConstants.smallPadding),
-            
+
             // Original Image
             _buildImageCard(
               title: lang.getText('original_image'),
@@ -350,9 +381,9 @@ class _ImageToImageScreenState extends State<ImageToImageScreen> with SingleTick
               icon: Icons.image,
               color: AppColors.primaryBrown,
             ),
-            
+
             const SizedBox(height: AppConstants.mediumPadding),
-            
+
             // Reference Image (for style transfer)
             if (_enhancementMode == 'style_transfer')
               _buildImageCard(
@@ -400,11 +431,10 @@ class _ImageToImageScreenState extends State<ImageToImageScreen> with SingleTick
               ),
               child: image != null
                   ? ClipRRect(
-                      borderRadius: BorderRadius.circular(AppConstants.borderRadius),
-                      child: Image.file(
-                        File(image.path),
-                        fit: BoxFit.cover,
+                      borderRadius: BorderRadius.circular(
+                        AppConstants.borderRadius,
                       ),
+                      child: Image.file(File(image.path), fit: BoxFit.cover),
                     )
                   : Icon(icon, size: 32, color: color),
             ),
@@ -493,7 +523,8 @@ class _ImageToImageScreenState extends State<ImageToImageScreen> with SingleTick
                   icon: Icons.palette,
                   isSelected: _enhancementMode == 'style_transfer',
                   color: AppColors.accentOrange,
-                  onTap: () => setState(() => _enhancementMode = 'style_transfer'),
+                  onTap: () =>
+                      setState(() => _enhancementMode = 'style_transfer'),
                 ),
                 _buildModeChip(
                   label: lang.getText('creative_transform'),
@@ -580,8 +611,8 @@ class _ImageToImageScreenState extends State<ImageToImageScreen> with SingleTick
                 hintText: _enhancementMode == 'enhance'
                     ? 'e.g., Enhance colors and details'
                     : _enhancementMode == 'style_transfer'
-                        ? 'e.g., Apply Van Gogh style'
-                        : 'e.g., Transform into digital art',
+                    ? 'e.g., Apply Van Gogh style'
+                    : 'e.g., Transform into digital art',
                 suffixIcon: _isListening
                     ? ScaleTransition(
                         scale: _pulseAnimation,
@@ -591,11 +622,16 @@ class _ImageToImageScreenState extends State<ImageToImageScreen> with SingleTick
                         ),
                       )
                     : IconButton(
-                        icon: const Icon(Icons.mic_none, color: AppColors.primaryBrown),
+                        icon: const Icon(
+                          Icons.mic_none,
+                          color: AppColors.primaryBrown,
+                        ),
                         onPressed: _startListening,
                       ),
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(AppConstants.borderRadius),
+                  borderRadius: BorderRadius.circular(
+                    AppConstants.borderRadius,
+                  ),
                   borderSide: BorderSide(color: AppColors.textLight),
                 ),
                 contentPadding: const EdgeInsets.all(12),
@@ -714,9 +750,7 @@ class _ImageToImageScreenState extends State<ImageToImageScreen> with SingleTick
       ),
       onPressed: onTap,
       backgroundColor: color,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
     );
   }
 
@@ -748,8 +782,12 @@ class _ImageToImageScreenState extends State<ImageToImageScreen> with SingleTick
               children: [
                 Expanded(
                   child: CustomButton(
-                    onPressed: _originalImage != null ? _processImageToImage : null,
-                    label: _isProcessing ? lang.getText('processing') : lang.getText('transform_image'),
+                    onPressed: _originalImage != null
+                        ? _processImageToImage
+                        : null,
+                    label: _isProcessing
+                        ? lang.getText('processing')
+                        : lang.getText('transform_image'),
                     icon: Icons.auto_awesome,
                     backgroundColor: AppColors.accentOrange,
                     isLoading: _isProcessing,
@@ -771,4 +809,3 @@ class _ImageToImageScreenState extends State<ImageToImageScreen> with SingleTick
     );
   }
 }
-

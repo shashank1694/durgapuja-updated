@@ -1,22 +1,24 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
-import 'package:provider/provider.dart';
 import '../../models/generated_image.dart';
 import '../../models/editable_element.dart';
 import '../config/api_keys.dart';
 import 'replicate_sam_service.dart';
+import 'replicate_inpaint_service.dart';
 import 'krea_generative_fill_service.dart';
 import 'krea_enhancement_service.dart';
 
 class TapToEditService {
   final ReplicateSAMService _samService = ReplicateSAMService();
-  final KreaGenerativeFillService _kreaFillService = KreaGenerativeFillService();
+  final ReplicateInpaintService _inpaintService = ReplicateInpaintService();
+  final KreaGenerativeFillService _kreaFillService =
+      KreaGenerativeFillService();
   final KreaEnhancementService _kreaEnhanceService = KreaEnhancementService();
 
   /// Complete Tap-to-Edit workflow. Pass [traceImagePoints] (list of [x,y] in image coords)
   /// to improve detection of the region (face, weapons, ornaments, lion, etc.).
-  /// When [referenceImage] is provided, the edit prompt is enhanced so the result matches
-  /// the reference style and details.
+  /// If [precomputedMaskUrl] is provided (e.g. from the immediate edge-snapping preview),
+  /// the SAM 2 step is skipped.
   Future<GeneratedImage> completeTapToEditWorkflow({
     required GeneratedImage originalImage,
     required double tapX,
@@ -26,52 +28,73 @@ class TapToEditService {
     required String editPrompt,
     required ElementType elementType,
     List<List<double>>? traceImagePoints,
+    String? precomputedMaskUrl,
     File? referenceImage,
-    bool applyRelighting = true,
+    bool applyRelighting = false,
     bool preserveColors = true,
   }) async {
     try {
-      // When user provides a reference image, enhance the prompt so the edit uses it
       final effectivePrompt = referenceImage != null
           ? 'Match the style, form and details of the reference image. $editPrompt'
           : editPrompt;
 
-      // Step 1: Generate mask using multiple points from trace (better for face, weapons, lion, etc.)
-      // or single center point if no trace points provided
-      final maskImageUrl = traceImagePoints != null && traceImagePoints.length >= 2
-          ? await _samService.generateMaskFromPoints(
-              imageUrl: originalImage.url,
-              imagePoints: traceImagePoints,
-              imageWidth: imageWidth,
-              imageHeight: imageHeight,
-            )
-          : await _samService.generateMaskFromTap(
-              imageUrl: originalImage.url,
-              x: tapX,
-              y: tapY,
-              imageWidth: imageWidth,
-              imageHeight: imageHeight,
-            );
-
-      // Step 2: Apply generative fill using Krea (reference image used via enhanced prompt)
-      final editedImageUrl = await _kreaFillService.completeGenerativeFill(
-        originalImageUrl: originalImage.url,
-        maskImageUrl: maskImageUrl,
-        prompt: effectivePrompt,
-        referenceImage: referenceImage,
-      );
-
-      // Step 3: Enhance and polish using Krea (replaces Photoroom)
-      String finalImageUrl = editedImageUrl;
-      if (applyRelighting) {
-        finalImageUrl = await _kreaEnhanceService.completeEnhancement(
-          imageUrl: editedImageUrl,
-          applyAutoEnhancement: true,
-          applyProfessionalPolish: true,
+      // Step 1: Use precomputed mask if available, or generate via SAM 2
+      String maskImageUrl;
+      if (precomputedMaskUrl != null && precomputedMaskUrl.isNotEmpty) {
+        maskImageUrl = precomputedMaskUrl;
+      } else if (traceImagePoints != null && traceImagePoints.length >= 2) {
+        maskImageUrl = await _samService.generateMaskFromPoints(
+          imageUrl: originalImage.url,
+          imagePoints: traceImagePoints,
+          imageWidth: imageWidth,
+          imageHeight: imageHeight,
+        );
+      } else {
+        maskImageUrl = await _samService.generateMaskFromTap(
+          imageUrl: originalImage.url,
+          x: tapX,
+          y: tapY,
+          imageWidth: imageWidth,
+          imageHeight: imageHeight,
         );
       }
 
-      // Step 4: Create the final edited image
+      // Step 2: Apply generative fill using Replicate FLUX Fill (or SD Inpaint fallback)
+      String editedImageUrl;
+      try {
+        editedImageUrl = await _inpaintService.inpaintImage(
+          originalImageUrl: originalImage.url,
+          maskImageUrl: maskImageUrl,
+          prompt: effectivePrompt,
+        );
+      } catch (inpaintErr) {
+        debugPrint(
+          'Replicate inpaint failed: $inpaintErr, trying Krea fallback...',
+        );
+        editedImageUrl = await _kreaFillService.completeGenerativeFill(
+          originalImageUrl: originalImage.url,
+          maskImageUrl: maskImageUrl,
+          prompt: effectivePrompt,
+          referenceImage: referenceImage,
+        );
+      }
+
+      // Step 3: Optional enhancement using Krea
+      String finalImageUrl = editedImageUrl;
+      if (applyRelighting && ApiKeys.kreaApiKey.isNotEmpty) {
+        try {
+          finalImageUrl = await _kreaEnhanceService.completeEnhancement(
+            imageUrl: editedImageUrl,
+            applyAutoEnhancement: true,
+            applyProfessionalPolish: true,
+          );
+        } catch (enhanceErr) {
+          debugPrint('Enhancement skipped: $enhanceErr');
+          finalImageUrl = editedImageUrl;
+        }
+      }
+
+      // Step 4: Create final edited image
       final editedImage = GeneratedImage(
         id: '${originalImage.id}_edited_${DateTime.now().millisecondsSinceEpoch}',
         url: finalImageUrl,
@@ -87,9 +110,13 @@ class TapToEditService {
   }
 
   /// Generate element-specific edit prompt
-  String generateElementEditPrompt(ElementType elementType, String editDescription, String originalPrompt) {
+  String generateElementEditPrompt(
+    ElementType elementType,
+    String editDescription,
+    String originalPrompt,
+  ) {
     final elementDetails = EditableElement.fromType(elementType);
-    
+
     return '''
 Edit the ${elementDetails?.type.displayName.toLowerCase() ?? 'selected element'} of this Durga idol design:
 Original design: $originalPrompt

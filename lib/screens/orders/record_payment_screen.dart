@@ -176,12 +176,15 @@ class _RecordPaymentScreenState extends State<RecordPaymentScreen> {
             return;
           }
           debugPrint("Bangla: $banglaText");
-          final englishText =
-              await _translationService.translateToEnglish(banglaText);
+          final englishText = await _translationService.translateToEnglish(
+            banglaText,
+          );
           debugPrint("English: $englishText");
           _showVoiceNoteRecheckDialog(banglaText, englishText);
         },
-        backgroundColor: _speechService.isListening ? Colors.orange : AppColors.primaryBrown,
+        backgroundColor: _speechService.isListening
+            ? Colors.orange
+            : AppColors.primaryBrown,
         child: Icon(
           _speechService.isListening ? Icons.graphic_eq : Icons.mic,
           color: Colors.white,
@@ -467,7 +470,6 @@ class _RecordPaymentScreenState extends State<RecordPaymentScreen> {
           ),
         ),
       ),
-
     );
   }
 

@@ -105,68 +105,66 @@ class _SamitiFundsScreenState extends State<SamitiFundsScreen> {
             icon: const Icon(Icons.arrow_back),
             onPressed: () => context.go('/finance/dashboard'),
           ),
-        actions: const [
-          LanguageToggleAction(),
-        ],
-      ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Fund Sources Header
-              const Text(
-                "Fund sources",
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-              ),
+          actions: const [LanguageToggleAction()],
+        ),
+        body: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Fund Sources Header
+                const Text(
+                  "Fund sources",
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                ),
 
-              const SizedBox(height: 15),
+                const SizedBox(height: 15),
 
-              // Cards
-              _fundCard(
-                name: "Artisan Support Grant",
-                amount: "₹10,500",
-                date: "10 Oct",
-                status: "Repayment Due",
-                statusColor: Colors.red,
-                statusDate: "15 Oct",
-                showButton: true,
-              ),
+                // Cards
+                _fundCard(
+                  name: "Artisan Support Grant",
+                  amount: "₹10,500",
+                  date: "10 Oct",
+                  status: "Repayment Due",
+                  statusColor: Colors.red,
+                  statusDate: "15 Oct",
+                  showButton: true,
+                ),
 
-              const SizedBox(height: 12),
+                const SizedBox(height: 12),
 
-              _fundCard(
-                name: "Artisan Support Grant",
-                amount: "₹10,500",
-                date: "10 Oct",
-                status: "Paid",
-                statusColor: Colors.green,
-                showButton: false,
-              ),
+                _fundCard(
+                  name: "Artisan Support Grant",
+                  amount: "₹10,500",
+                  date: "10 Oct",
+                  status: "Paid",
+                  statusColor: Colors.green,
+                  showButton: false,
+                ),
 
-              const SizedBox(height: 12),
+                const SizedBox(height: 12),
 
-              _fundCard(
-                name: "Artisan Support Grant",
-                amount: "₹10,500",
-                date: "10 Oct",
-                status: "Repayment Due",
-                statusColor: Colors.red,
-                statusDate: "15 Oct",
-                showButton: true,
-              ),
+                _fundCard(
+                  name: "Artisan Support Grant",
+                  amount: "₹10,500",
+                  date: "10 Oct",
+                  status: "Repayment Due",
+                  statusColor: Colors.red,
+                  statusDate: "15 Oct",
+                  showButton: true,
+                ),
 
-              const SizedBox(height: 40),
-            ],
+                const SizedBox(height: 40),
+              ],
+            ),
           ),
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _showAddSamitiFundDialog,
-        backgroundColor: const Color(0xFF9A5222),
-        child: const Icon(Icons.add, color: Colors.white),
-      ),
+        floatingActionButton: FloatingActionButton(
+          onPressed: _showAddSamitiFundDialog,
+          backgroundColor: const Color(0xFF9A5222),
+          child: const Icon(Icons.add, color: Colors.white),
+        ),
       ),
     );
   }

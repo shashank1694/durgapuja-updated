@@ -13,9 +13,13 @@ class ElementEditService {
   final KreaAIService _kreaService = KreaAIService();
 
   /// Creates an element-specific edit prompt
-  String createElementEditPrompt(ElementType elementType, String editDescription, String originalPrompt) {
+  String createElementEditPrompt(
+    ElementType elementType,
+    String editDescription,
+    String originalPrompt,
+  ) {
     final elementDetails = EditableElement.fromType(elementType);
-    
+
     return '''
 Edit the ${elementDetails?.type.displayName.toLowerCase() ?? 'selected element'} of this Durga idol design:
 Original design: $originalPrompt
@@ -35,13 +39,16 @@ Requirements:
   /// Resolves original image to a local File for Krea reference-based generation.
   /// Handles http(s) URLs (download), asset paths (rootBundle), and local file paths.
   Future<File> _originalImageToFile(String originalImageUrl) async {
-    if (originalImageUrl.startsWith('http://') || originalImageUrl.startsWith('https://')) {
+    if (originalImageUrl.startsWith('http://') ||
+        originalImageUrl.startsWith('https://')) {
       final response = await http.get(Uri.parse(originalImageUrl));
       if (response.statusCode != 200) {
         throw Exception('Failed to download original image');
       }
       final dir = await getTemporaryDirectory();
-      final file = File('${dir.path}/element_edit_original_${DateTime.now().millisecondsSinceEpoch}.jpg');
+      final file = File(
+        '${dir.path}/element_edit_original_${DateTime.now().millisecondsSinceEpoch}.jpg',
+      );
       await file.writeAsBytes(response.bodyBytes);
       return file;
     }
@@ -49,7 +56,9 @@ Requirements:
       final bytes = await rootBundle.load(originalImageUrl);
       final buffer = bytes.buffer.asUint8List();
       final dir = await getTemporaryDirectory();
-      final file = File('${dir.path}/element_edit_asset_${DateTime.now().millisecondsSinceEpoch}.jpg');
+      final file = File(
+        '${dir.path}/element_edit_asset_${DateTime.now().millisecondsSinceEpoch}.jpg',
+      );
       await file.writeAsBytes(buffer);
       return file;
     }
@@ -69,10 +78,16 @@ Requirements:
     String originalPrompt,
   ) async {
     try {
-      final editPrompt = createElementEditPrompt(elementType, editDescription, originalPrompt);
+      final editPrompt = createElementEditPrompt(
+        elementType,
+        editDescription,
+        originalPrompt,
+      );
       final originalFile = await _originalImageToFile(originalImageUrl);
       try {
-        return await _kreaService.generateImageWithReferences(editPrompt, [originalFile]);
+        return await _kreaService.generateImageWithReferences(editPrompt, [
+          originalFile,
+        ]);
       } finally {
         try {
           if (await originalFile.exists()) await originalFile.delete();
@@ -85,7 +100,12 @@ Requirements:
   }
 
   /// Uploads edited image to cloud storage
-  Future<String> uploadEditedImage(String imageUrl, String userId, String originalImageId, ElementType elementType) async {
+  Future<String> uploadEditedImage(
+    String imageUrl,
+    String userId,
+    String originalImageId,
+    ElementType elementType,
+  ) async {
     try {
       // Download edited image
       final http.Response response = await http.get(Uri.parse(imageUrl));
@@ -94,7 +114,8 @@ Requirements:
       }
 
       // Create storage reference with element type
-      final fileName = '${userId}/edited_${elementType.name}_${originalImageId}_${DateTime.now().millisecondsSinceEpoch}.jpg';
+      final fileName =
+          '$userId/edited_${elementType.name}_${originalImageId}_${DateTime.now().millisecondsSinceEpoch}.jpg';
       final ref = _storage.ref().child('edited_designs/$fileName');
 
       // Upload file
@@ -121,12 +142,12 @@ Requirements:
     if (description.trim().isEmpty) {
       return false;
     }
-    
+
     // Check for minimum length
     if (description.trim().length < 5) {
       return false;
     }
-    
+
     return true;
   }
 

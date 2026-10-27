@@ -105,345 +105,361 @@ class _ReportsScreenState extends State<ReportsScreen> {
             onPressed: () => context.go('/finance/dashboard'),
           ),
           title: Text(lang.getText('profits')),
-          actions: const [
-            LanguageToggleAction(),
-          ],
+          actions: const [LanguageToggleAction()],
         ),
         body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Overview Section
-              Row(
-                children: [
-                  Expanded(
-                    child: Container(
-                      padding: const EdgeInsets.all(18),
-                      decoration: BoxDecoration(
-                        color: AppColors.primaryBrown,
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            lang.getText('total_income'),
-                            style: const TextStyle(
-                              fontSize: 14,
-                              color: Colors.white70,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            "₹${_formatCurrency(_totalIncome)}",
-                            style: const TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Container(
-                      padding: const EdgeInsets.all(18),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            lang.getText('total_expenses'),
-                            style: const TextStyle(
-                              fontSize: 14,
-                              color: AppColors.textLight,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            "₹${_formatCurrency(_totalExpenses)}",
-                            style: const TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.textDark,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 12),
-
-              // Total Profit Card
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(18),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF5E6D3),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Overview Section
+                Row(
                   children: [
-                    Text(
-                      lang.getText('total_profit'),
-                      style: const TextStyle(
-                        fontSize: 14,
-                        color: AppColors.textLight,
+                    Expanded(
+                      child: Container(
+                        padding: const EdgeInsets.all(18),
+                        decoration: BoxDecoration(
+                          color: AppColors.primaryBrown,
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              lang.getText('total_income'),
+                              style: const TextStyle(
+                                fontSize: 14,
+                                color: Colors.white70,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              "₹${_formatCurrency(_totalIncome)}",
+                              style: const TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                    const SizedBox(height: 8),
-                    Text(
-                      "₹${_formatCurrency(_totalProfit)}",
-                      style: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.textDark,
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Container(
+                        padding: const EdgeInsets.all(18),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              lang.getText('total_expenses'),
+                              style: const TextStyle(
+                                fontSize: 14,
+                                color: AppColors.textLight,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              "₹${_formatCurrency(_totalExpenses)}",
+                              style: const TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: AppColors.textDark,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ],
                 ),
-              ),
 
-              const SizedBox(height: 30),
+                const SizedBox(height: 12),
 
-              // Recent Transactions Section (latest 3 from DB)
-              Text(
-                lang.getText('recent_transactions'),
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textDark,
-                ),
-              ),
-              const SizedBox(height: 15),
-              if (_recentTransactions.isEmpty)
+                // Total Profit Card
                 Container(
-                  padding: const EdgeInsets.all(16),
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(18),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: const Color(0xFFF5E6D3),
                     borderRadius: BorderRadius.circular(16),
                   ),
-                  child: Text(
-                    lang.getText('no_transactions'),
-                    style: const TextStyle(color: AppColors.textLight),
-                  ),
-                )
-              else
-                ..._recentTransactions.map((t) {
-                  final id = t['id'] as int?;
-                  if (id == null) return const SizedBox.shrink();
-                  final type = t['type'] as String? ?? 'other';
-                  final amount = (t['amount'] as num?)?.toDouble() ?? 0.0;
-                  final desc = t['source_text'] as String? ?? '';
-                  final createdAt = t['created_at'] as String? ?? '';
-                  final amountColor = (type == 'income') ? Colors.green : Colors.red;
-                  final displayIntent = type.replaceAll('_', ' ');
-                  final dateStr = createdAt.length >= 10
-                      ? createdAt.substring(0, 10)
-                      : createdAt;
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: _buildRecentTransactionItem(
-                      id: id,
-                      intent: displayIntent,
-                      amount: amount,
-                      description: desc,
-                      dateStr: dateStr,
-                      amountColor: amountColor,
-                      onUndo: _undoTransaction,
-                    ),
-                  );
-                }),
-
-              const SizedBox(height: 30),
-
-              // Project Profits Section
-              Text(
-                lang.getText('project_profits'),
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textDark,
-                ),
-              ),
-
-              const SizedBox(height: 15),
-
-              // Time Filter Buttons
-              Row(
-                children: [
-                  Expanded(child: _buildTimeFilterButton(lang.getText('last_6_months'))),
-                  const SizedBox(width: 10),
-                  Expanded(child: _buildTimeFilterButton(lang.getText('last_year'))),
-                  const SizedBox(width: 10),
-                  Expanded(child: _buildTimeFilterButton(lang.getText('all_years'))),
-                ],
-              ),
-
-              const SizedBox(height: 25),
-
-              // Bar Chart
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Column(
-                  children: _getProjectProfitsData().map((project) {
-                    return Column(
-                      children: [
-                        _buildBarChartItem(
-                          project['name'],
-                          project['value'],
-                          project['color'],
-                          isSelected: project['selected'] ?? false,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        lang.getText('total_profit'),
+                        style: const TextStyle(
+                          fontSize: 14,
+                          color: AppColors.textLight,
                         ),
-                        const SizedBox(height: 20),
-                      ],
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        "₹${_formatCurrency(_totalProfit)}",
+                        style: const TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                          color: AppColors.textDark,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 30),
+
+                // Recent Transactions Section (latest 3 from DB)
+                Text(
+                  lang.getText('recent_transactions'),
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textDark,
+                  ),
+                ),
+                const SizedBox(height: 15),
+                if (_recentTransactions.isEmpty)
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Text(
+                      lang.getText('no_transactions'),
+                      style: const TextStyle(color: AppColors.textLight),
+                    ),
+                  )
+                else
+                  ..._recentTransactions.map((t) {
+                    final id = t['id'] as int?;
+                    if (id == null) return const SizedBox.shrink();
+                    final type = t['type'] as String? ?? 'other';
+                    final amount = (t['amount'] as num?)?.toDouble() ?? 0.0;
+                    final desc = t['source_text'] as String? ?? '';
+                    final createdAt = t['created_at'] as String? ?? '';
+                    final amountColor = (type == 'income')
+                        ? Colors.green
+                        : Colors.red;
+                    final displayIntent = type.replaceAll('_', ' ');
+                    final dateStr = createdAt.length >= 10
+                        ? createdAt.substring(0, 10)
+                        : createdAt;
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: _buildRecentTransactionItem(
+                        id: id,
+                        intent: displayIntent,
+                        amount: amount,
+                        description: desc,
+                        dateStr: dateStr,
+                        amountColor: amountColor,
+                        onUndo: _undoTransaction,
+                      ),
                     );
-                  }).toList(),
+                  }),
+
+                const SizedBox(height: 30),
+
+                // Project Profits Section
+                Text(
+                  lang.getText('project_profits'),
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textDark,
+                  ),
                 ),
-              ),
 
-              const SizedBox(height: 30),
+                const SizedBox(height: 15),
 
-              // Material Expenses Section
-              Text(
-                lang.getText('material_expenses'),
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textDark,
-                ),
-              ),
-
-              const SizedBox(height: 15),
-
-              // Material Expenses Bar Chart
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Column(
+                // Time Filter Buttons
+                Row(
                   children: [
-                    _buildBarChartItem(
-                      "Clay",
-                      125000,
-                      AppColors.primaryBrown,
-                      barWidth: 1.0,
+                    Expanded(
+                      child: _buildTimeFilterButton(
+                        lang.getText('last_6_months'),
+                      ),
                     ),
-                    const SizedBox(height: 20),
-                    _buildBarChartItem(
-                      "Ornaments",
-                      25000,
-                      AppColors.accentOrange,
-                      barWidth: 0.25,
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: _buildTimeFilterButton(lang.getText('last_year')),
                     ),
-                    const SizedBox(height: 20),
-                    _buildBarChartItem(
-                      "Paint",
-                      40000,
-                      AppColors.primaryBrown,
-                      barWidth: 0.40,
-                    ),
-                    const SizedBox(height: 20),
-                    _buildBarChartItem(
-                      "Clothes",
-                      45000,
-                      AppColors.primaryBrown,
-                      barWidth: 0.45,
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: _buildTimeFilterButton(lang.getText('all_years')),
                     ),
                   ],
                 ),
-              ),
 
-              const SizedBox(height: 30),
+                const SizedBox(height: 25),
 
-              // Transactions Section
-              Text(
-                lang.getText('transactions'),
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textDark,
+                // Bar Chart
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Column(
+                    children: _getProjectProfitsData().map((project) {
+                      return Column(
+                        children: [
+                          _buildBarChartItem(
+                            project['name'],
+                            project['value'],
+                            project['color'],
+                            isSelected: project['selected'] ?? false,
+                          ),
+                          const SizedBox(height: 20),
+                        ],
+                      );
+                    }).toList(),
+                  ),
                 ),
-              ),
 
-              const SizedBox(height: 15),
+                const SizedBox(height: 30),
 
-              // Transaction Items
-              _buildTransactionItem(
-                '${lang.getText('payment_from_samiti')} 1',
-                "Oct 15",
-                "+ ₹16,000",
-                Colors.green,
-              ),
-              const SizedBox(height: 12),
-              _buildTransactionItem(
-                lang.getText('purchase_of_clay'),
-                "Oct 15",
-                "- ₹16,000",
-                Colors.red,
-              ),
+                // Material Expenses Section
+                Text(
+                  lang.getText('material_expenses'),
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textDark,
+                  ),
+                ),
 
-              const SizedBox(height: 30),
+                const SizedBox(height: 15),
 
-              // View All AI Transactions
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton.icon(
-                  onPressed: () => context.go('/finance/ai-logs'),
-                  icon: const Icon(Icons.smart_toy_outlined, size: 20),
-                  label: const Text('View All AI Transactions'),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: AppColors.primaryBrown,
-                    side: const BorderSide(color: AppColors.primaryBrown),
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                // Material Expenses Bar Chart
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Column(
+                    children: [
+                      _buildBarChartItem(
+                        "Clay",
+                        125000,
+                        AppColors.primaryBrown,
+                        barWidth: 1.0,
+                      ),
+                      const SizedBox(height: 20),
+                      _buildBarChartItem(
+                        "Ornaments",
+                        25000,
+                        AppColors.accentOrange,
+                        barWidth: 0.25,
+                      ),
+                      const SizedBox(height: 20),
+                      _buildBarChartItem(
+                        "Paint",
+                        40000,
+                        AppColors.primaryBrown,
+                        barWidth: 0.40,
+                      ),
+                      const SizedBox(height: 20),
+                      _buildBarChartItem(
+                        "Clothes",
+                        45000,
+                        AppColors.primaryBrown,
+                        barWidth: 0.45,
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(height: 30),
+
+                // Transactions Section
+                Text(
+                  lang.getText('transactions'),
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textDark,
+                  ),
+                ),
+
+                const SizedBox(height: 15),
+
+                // Transaction Items
+                _buildTransactionItem(
+                  '${lang.getText('payment_from_samiti')} 1',
+                  "Oct 15",
+                  "+ ₹16,000",
+                  Colors.green,
+                ),
+                const SizedBox(height: 12),
+                _buildTransactionItem(
+                  lang.getText('purchase_of_clay'),
+                  "Oct 15",
+                  "- ₹16,000",
+                  Colors.red,
+                ),
+
+                const SizedBox(height: 30),
+
+                // View All AI Transactions
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: () => context.go('/finance/ai-logs'),
+                    icon: const Icon(Icons.smart_toy_outlined, size: 20),
+                    label: const Text('View All AI Transactions'),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppColors.primaryBrown,
+                      side: const BorderSide(color: AppColors.primaryBrown),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
                   ),
                 ),
-              ),
 
-              const SizedBox(height: 30),
+                const SizedBox(height: 30),
 
-              // Detailed Reports Section
-              Text(
-                lang.getText('detailed_reports'),
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textDark,
+                // Detailed Reports Section
+                Text(
+                  lang.getText('detailed_reports'),
+                  style: const TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w600,
+                    color: AppColors.textDark,
+                  ),
                 ),
-              ),
 
-              const SizedBox(height: 15),
+                const SizedBox(height: 15),
 
-              // Report List Items
-              _buildReportItem(lang.getText('durga_puja_idols'), "+₹16,000", Colors.green),
-              const SizedBox(height: 12),
-              _buildReportItem(lang.getText('durga_puja_idols'), "+₹16,000", Colors.green),
+                // Report List Items
+                _buildReportItem(
+                  lang.getText('durga_puja_idols'),
+                  "+₹16,000",
+                  Colors.green,
+                ),
+                const SizedBox(height: 12),
+                _buildReportItem(
+                  lang.getText('durga_puja_idols'),
+                  "+₹16,000",
+                  Colors.green,
+                ),
 
-              const SizedBox(height: 100),
-            ],
+                const SizedBox(height: 100),
+              ],
+            ),
           ),
         ),
-      ),
       ),
     );
   }
@@ -460,8 +476,11 @@ class _ReportsScreenState extends State<ReportsScreen> {
     final amountStr = amountColor == Colors.green
         ? '+ ₹${_formatCurrency(amount)}'
         : '- ₹${_formatCurrency(amount)}';
-    final shortDesc =
-        description.isEmpty ? intent : (description.length > 40 ? '${description.substring(0, 40)}...' : description);
+    final shortDesc = description.isEmpty
+        ? intent
+        : (description.length > 40
+              ? '${description.substring(0, 40)}...'
+              : description);
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -654,31 +673,111 @@ class _ReportsScreenState extends State<ReportsScreen> {
     switch (_selectedTimeframe) {
       case "Last 6 months":
         return [
-          {'name': 'Saraswati P.', 'value': 125000, 'color': AppColors.primaryBrown, 'selected': false},
-          {'name': 'Durga P.', 'value': 25000, 'color': AppColors.accentOrange, 'selected': false},
-          {'name': 'Ganesha P.', 'value': 40000, 'color': AppColors.primaryBrown, 'selected': true},
-          {'name': 'Diwali', 'value': 45000, 'color': AppColors.primaryBrown, 'selected': false},
+          {
+            'name': 'Saraswati P.',
+            'value': 125000,
+            'color': AppColors.primaryBrown,
+            'selected': false,
+          },
+          {
+            'name': 'Durga P.',
+            'value': 25000,
+            'color': AppColors.accentOrange,
+            'selected': false,
+          },
+          {
+            'name': 'Ganesha P.',
+            'value': 40000,
+            'color': AppColors.primaryBrown,
+            'selected': true,
+          },
+          {
+            'name': 'Diwali',
+            'value': 45000,
+            'color': AppColors.primaryBrown,
+            'selected': false,
+          },
         ];
       case "Last year":
         return [
-          {'name': 'Saraswati P.', 'value': 280000, 'color': AppColors.primaryBrown, 'selected': false},
-          {'name': 'Durga P.', 'value': 120000, 'color': AppColors.accentOrange, 'selected': false},
-          {'name': 'Ganesha P.', 'value': 95000, 'color': AppColors.primaryBrown, 'selected': true},
-          {'name': 'Diwali', 'value': 110000, 'color': AppColors.primaryBrown, 'selected': false},
+          {
+            'name': 'Saraswati P.',
+            'value': 280000,
+            'color': AppColors.primaryBrown,
+            'selected': false,
+          },
+          {
+            'name': 'Durga P.',
+            'value': 120000,
+            'color': AppColors.accentOrange,
+            'selected': false,
+          },
+          {
+            'name': 'Ganesha P.',
+            'value': 95000,
+            'color': AppColors.primaryBrown,
+            'selected': true,
+          },
+          {
+            'name': 'Diwali',
+            'value': 110000,
+            'color': AppColors.primaryBrown,
+            'selected': false,
+          },
         ];
       case "All years":
         return [
-          {'name': 'Saraswati P.', 'value': 450000, 'color': AppColors.primaryBrown, 'selected': false},
-          {'name': 'Durga P.', 'value': 320000, 'color': AppColors.accentOrange, 'selected': false},
-          {'name': 'Ganesha P.', 'value': 280000, 'color': AppColors.primaryBrown, 'selected': true},
-          {'name': 'Diwali', 'value': 350000, 'color': AppColors.primaryBrown, 'selected': false},
+          {
+            'name': 'Saraswati P.',
+            'value': 450000,
+            'color': AppColors.primaryBrown,
+            'selected': false,
+          },
+          {
+            'name': 'Durga P.',
+            'value': 320000,
+            'color': AppColors.accentOrange,
+            'selected': false,
+          },
+          {
+            'name': 'Ganesha P.',
+            'value': 280000,
+            'color': AppColors.primaryBrown,
+            'selected': true,
+          },
+          {
+            'name': 'Diwali',
+            'value': 350000,
+            'color': AppColors.primaryBrown,
+            'selected': false,
+          },
         ];
       default:
         return [
-          {'name': 'Saraswati P.', 'value': 125000, 'color': AppColors.primaryBrown, 'selected': false},
-          {'name': 'Durga P.', 'value': 25000, 'color': AppColors.accentOrange, 'selected': false},
-          {'name': 'Ganesha P.', 'value': 40000, 'color': AppColors.primaryBrown, 'selected': true},
-          {'name': 'Diwali', 'value': 45000, 'color': AppColors.primaryBrown, 'selected': false},
+          {
+            'name': 'Saraswati P.',
+            'value': 125000,
+            'color': AppColors.primaryBrown,
+            'selected': false,
+          },
+          {
+            'name': 'Durga P.',
+            'value': 25000,
+            'color': AppColors.accentOrange,
+            'selected': false,
+          },
+          {
+            'name': 'Ganesha P.',
+            'value': 40000,
+            'color': AppColors.primaryBrown,
+            'selected': true,
+          },
+          {
+            'name': 'Diwali',
+            'value': 45000,
+            'color': AppColors.primaryBrown,
+            'selected': false,
+          },
         ];
     }
   }
@@ -756,9 +855,15 @@ class _ReportsScreenState extends State<ReportsScreen> {
               ElevatedButton(
                 onPressed: () async {
                   // Parse the amount string to determine if income or expense
-                  final amountStr = amount.replaceAll('₹', '').replaceAll(',', '');
+                  final amountStr = amount
+                      .replaceAll('₹', '')
+                      .replaceAll(',', '');
                   final isIncome = amountColor == Colors.green;
-                  final transactionAmount = double.tryParse(amountStr.replaceAll('+ ', '').replaceAll('- ', '')) ?? 0.0;
+                  final transactionAmount =
+                      double.tryParse(
+                        amountStr.replaceAll('+ ', '').replaceAll('- ', ''),
+                      ) ??
+                      0.0;
 
                   try {
                     if (isIncome) {
@@ -771,18 +876,25 @@ class _ReportsScreenState extends State<ReportsScreen> {
                     await _loadFinanceData();
 
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Transaction confirmed successfully')),
+                      const SnackBar(
+                        content: Text('Transaction confirmed successfully'),
+                      ),
                     );
                   } catch (e) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Error confirming transaction: $e')),
+                      SnackBar(
+                        content: Text('Error confirming transaction: $e'),
+                      ),
                     );
                   }
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primaryBrown,
                   foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
                   textStyle: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,

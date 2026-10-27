@@ -15,7 +15,10 @@ class OtpVerificationScreen extends StatefulWidget {
 }
 
 class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
-  final List<TextEditingController> _controllers = List.generate(6, (index) => TextEditingController());
+  final List<TextEditingController> _controllers = List.generate(
+    6,
+    (index) => TextEditingController(),
+  );
   final List<FocusNode> _focusNodes = List.generate(6, (index) => FocusNode());
   final _formKey = GlobalKey<FormState>();
 
@@ -243,9 +246,13 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                       margin: const EdgeInsets.symmetric(horizontal: 4),
                       decoration: BoxDecoration(
                         color: Colors.white,
-                        borderRadius: BorderRadius.circular(AppConstants.borderRadius),
+                        borderRadius: BorderRadius.circular(
+                          AppConstants.borderRadius,
+                        ),
                         border: Border.all(
-                          color: _errorMessage != null ? AppColors.errorRed : AppColors.primaryBrown.withOpacity(0.3),
+                          color: _errorMessage != null
+                              ? AppColors.errorRed
+                              : AppColors.primaryBrown.withOpacity(0.3),
                           width: 1,
                         ),
                         boxShadow: [
@@ -284,7 +291,9 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                     padding: const EdgeInsets.all(AppConstants.smallPadding),
                     decoration: BoxDecoration(
                       color: AppColors.errorRed.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(AppConstants.borderRadius),
+                      borderRadius: BorderRadius.circular(
+                        AppConstants.borderRadius,
+                      ),
                     ),
                     child: Row(
                       children: [
@@ -340,7 +349,9 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                         _canResend ? 'Resend' : 'Resend in ${_resendTimer}s',
                         style: TextStyle(
                           fontSize: AppConstants.fontSizeSmall,
-                          color: _canResend ? AppColors.primaryBrown : AppColors.textLight,
+                          color: _canResend
+                              ? AppColors.primaryBrown
+                              : AppColors.textLight,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -355,7 +366,9 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                   padding: const EdgeInsets.all(AppConstants.smallPadding),
                   decoration: BoxDecoration(
                     color: AppColors.primaryBrown.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(AppConstants.borderRadius),
+                    borderRadius: BorderRadius.circular(
+                      AppConstants.borderRadius,
+                    ),
                   ),
                   child: Row(
                     children: [

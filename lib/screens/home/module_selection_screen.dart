@@ -21,83 +21,91 @@ class ModuleSelectionScreen extends StatelessWidget {
           padding: const EdgeInsets.all(AppConstants.defaultPadding),
           child: ConstrainedBox(
             constraints: BoxConstraints(
-              minHeight: MediaQuery.of(context).size.height - MediaQuery.of(context).padding.top - MediaQuery.of(context).padding.bottom - AppConstants.defaultPadding * 2,
+              minHeight:
+                  MediaQuery.of(context).size.height -
+                  MediaQuery.of(context).padding.top -
+                  MediaQuery.of(context).padding.bottom -
+                  AppConstants.defaultPadding * 2,
             ),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-              // App Logo/Icon
-              Container(
-                width: 120,
-                height: 120,
-                decoration: const BoxDecoration(
-                  color: AppColors.primaryBrown,
-                  shape: BoxShape.circle,
+                // App Logo/Icon
+                Container(
+                  width: 120,
+                  height: 120,
+                  decoration: const BoxDecoration(
+                    color: AppColors.primaryBrown,
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.palette_outlined,
+                    color: Colors.white,
+                    size: 60,
+                  ),
                 ),
-                child: const Icon(
-                  Icons.palette_outlined,
-                  color: Colors.white,
-                  size: 60,
-                ),
-              ),
-              const SizedBox(height: AppConstants.largePadding),
-
-              // Welcome Text
-              Text(
-                l10n.appTitle,
-                style: const TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textDark,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: AppConstants.mediumPadding),
-              Text(
-                l10n.chooseModule,
-                style: TextStyle(
-                  fontSize: AppConstants.fontSizeBody,
-                  color: AppColors.textLight,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: AppConstants.largePadding * 2),
-
-              // Finance Module Button
-              _ModuleCard(
-                icon: Icons.account_balance_wallet_outlined,
-                title: l10n.finance,
-                description: l10n.financeDescription,
-                color: AppColors.primaryBrown,
-                onTap: () => context.go('/finance'),
-              ),
-              const SizedBox(height: AppConstants.largePadding),
-
-              // Design Module Button
-              _ModuleCard(
-                icon: Icons.palette_outlined,
-                title: l10n.design,
-                description: l10n.designDescription,
-                color: AppColors.accentOrange,
-                onTap: () => context.go('/design'),
-              ),
-
-              // Admin Module Button (only for admins)
-              ...authProvider.isAdmin ? [
                 const SizedBox(height: AppConstants.largePadding),
-                _ModuleCard(
-                  icon: Icons.admin_panel_settings,
-                  title: 'Admin Panel',
-                  description: 'Manage users, roles, and system settings',
-                  color: Colors.red.shade600,
-                  onTap: () => context.go('/admin'),
+
+                // Welcome Text
+                Text(
+                  l10n.appTitle,
+                  style: const TextStyle(
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                    color: AppColors.textDark,
+                  ),
+                  textAlign: TextAlign.center,
                 ),
-              ] : [],
+                const SizedBox(height: AppConstants.mediumPadding),
+                Text(
+                  l10n.chooseModule,
+                  style: TextStyle(
+                    fontSize: AppConstants.fontSizeBody,
+                    color: AppColors.textLight,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: AppConstants.largePadding * 2),
+
+                // Finance Module Button
+                _ModuleCard(
+                  icon: Icons.account_balance_wallet_outlined,
+                  title: l10n.finance,
+                  description: l10n.financeDescription,
+                  color: AppColors.primaryBrown,
+                  onTap: () => context.go('/finance'),
+                ),
+                const SizedBox(height: AppConstants.largePadding),
+
+                // Design Module Button
+                _ModuleCard(
+                  icon: Icons.palette_outlined,
+                  title: l10n.design,
+                  description: l10n.designDescription,
+                  color: AppColors.accentOrange,
+                  onTap: () => context.go('/design'),
+                ),
+
+                // Admin Module Button (only for admins)
+                ...authProvider.isAdmin
+                    ? [
+                        const SizedBox(height: AppConstants.largePadding),
+                        _ModuleCard(
+                          icon: Icons.admin_panel_settings,
+                          title: 'Admin Panel',
+                          description:
+                              'Manage users, roles, and system settings',
+                          color: Colors.red.shade600,
+                          onTap: () => context.go('/admin'),
+                        ),
+                      ]
+                    : [],
               ],
+            ),
           ),
         ),
       ),
-      ));
+    );
   }
 }
 
@@ -141,14 +149,8 @@ class _ModuleCardState extends State<_ModuleCard> {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: _isPressed
-                ? [
-                    widget.color.withOpacity(0.1),
-                    Colors.white,
-                  ]
-                : [
-                    Colors.white,
-                    AppColors.cardCream.withOpacity(0.8),
-                  ],
+                ? [widget.color.withOpacity(0.1), Colors.white]
+                : [Colors.white, AppColors.cardCream.withOpacity(0.8)],
           ),
           borderRadius: BorderRadius.circular(AppConstants.largeRadius),
           boxShadow: _isPressed
@@ -186,7 +188,9 @@ class _ModuleCardState extends State<_ModuleCard> {
                   color: _isPressed
                       ? widget.color.withOpacity(0.25)
                       : widget.color.withOpacity(0.15),
-                  borderRadius: BorderRadius.circular(AppConstants.borderRadius),
+                  borderRadius: BorderRadius.circular(
+                    AppConstants.borderRadius,
+                  ),
                   border: Border.all(
                     color: widget.color.withOpacity(_isPressed ? 0.4 : 0.2),
                     width: 1,

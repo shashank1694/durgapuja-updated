@@ -23,7 +23,10 @@ class _ClientsScreenState extends State<ClientsScreen> {
             children: [
               // Search Bar
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 15,
+                ),
                 child: Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 15,
@@ -82,7 +85,9 @@ class _ClientsScreenState extends State<ClientsScreen> {
                           ),
                         ),
                         const SizedBox(width: 12),
-                        Expanded(child: _buildSummaryCard("12", "Due Tomorrow")),
+                        Expanded(
+                          child: _buildSummaryCard("12", "Due Tomorrow"),
+                        ),
                         const SizedBox(width: 12),
                         Expanded(child: _buildSummaryCard("24", "Due Oct 13")),
                       ],

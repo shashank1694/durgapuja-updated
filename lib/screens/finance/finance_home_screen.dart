@@ -27,7 +27,8 @@ class _FinanceHomeScreenState extends State<FinanceHomeScreen> {
   double _totalExpenses = 0.0;
   double get _currentBalance => _totalIncome - _totalExpenses;
   bool _showManagementView = false; // Toggle between Dashboard and All Sections
-  bool _isProcessingSpeech = false; // Show loading overlay while GPT is processing
+  bool _isProcessingSpeech =
+      false; // Show loading overlay while GPT is processing
 
   @override
   void initState() {
@@ -79,8 +80,9 @@ class _FinanceHomeScreenState extends State<FinanceHomeScreen> {
     debugPrint("Bangla: $banglaText");
     try {
       // Step 1: Translate
-      final englishText =
-          await _translationService.translateToEnglish(banglaText);
+      final englishText = await _translationService.translateToEnglish(
+        banglaText,
+      );
       debugPrint("English: $englishText");
 
       if (!mounted) return;
@@ -164,340 +166,360 @@ class _FinanceHomeScreenState extends State<FinanceHomeScreen> {
           Scaffold(
             backgroundColor: AppColors.backgroundCream,
             body: SafeArea(
-            child: SingleChildScrollView(
-              padding: EdgeInsets.symmetric(
-                horizontal: horizontalPad.clamp(16.0, 24.0),
-                vertical: verticalPad.clamp(8.0, 16.0),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Expanded(
-                    child: Row(
+              child: SingleChildScrollView(
+                padding: EdgeInsets.symmetric(
+                  horizontal: horizontalPad.clamp(16.0, 24.0),
+                  vertical: verticalPad.clamp(8.0, 16.0),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        IconButton(
-                          icon: const Icon(Icons.arrow_back),
-                          onPressed: () => context.go('/main'),
-                          tooltip: 'Back to Modules',
+                        Expanded(
+                          child: Row(
+                            children: [
+                              IconButton(
+                                icon: const Icon(Icons.arrow_back),
+                                onPressed: () => context.go('/main'),
+                                tooltip: 'Back to Modules',
+                              ),
+                              SizedBox(width: size.width * 0.02),
+                              Flexible(
+                                child: Text(
+                                  lang.getText('finance'),
+                                  style: const TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                        SizedBox(width: size.width * 0.02),
-                        Flexible(
-                          child: Text(
-                            lang.getText('finance'),
-                            style: const TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.w600,
-                            ),
-                            overflow: TextOverflow.ellipsis,
+                        const LanguageToggleAction(),
+                        IconButton(
+                          onPressed: () {},
+                          icon: Icon(Icons.settings, size: size.width * 0.065),
+                        ),
+                      ],
+                    ),
+
+                    SizedBox(height: size.height * 0.01),
+                    Text(
+                      lang.getText('hello_artisan'),
+                      style: TextStyle(
+                        fontSize: (size.width * 0.065).clamp(20.0, 28.0),
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    SizedBox(height: size.height * 0.028),
+                    if (!_showManagementView) _buildQuickNavigationChips(),
+                    SizedBox(height: size.height * 0.028),
+
+                    // Text input for Bengali transaction — submit → GPT → confirm → database → UI
+                    LayoutBuilder(
+                      builder: (context, constraints) {
+                        final size = MediaQuery.of(context).size;
+                        final pad = size.width * 0.06;
+                        final radius = size.width * 0.06;
+                        return Container(
+                          width: double.infinity,
+                          padding: EdgeInsets.all(pad.clamp(16.0, 28.0)),
+                          decoration: BoxDecoration(
+                            color: AppColors.cardCream,
+                            borderRadius: BorderRadius.circular(radius),
+                          ),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              Text(
+                                lang.getText('record_voice_note'),
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              SizedBox(height: size.height * 0.012),
+                              TextField(
+                                controller: _transactionInputController,
+                                decoration: InputDecoration(
+                                  hintText: lang.getText(
+                                    'type_transaction_bengali',
+                                  ),
+                                  hintStyle: TextStyle(
+                                    fontSize: 14,
+                                    color: Colors.grey.shade600,
+                                  ),
+                                  filled: true,
+                                  fillColor: Colors.white,
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: BorderSide(
+                                      color: AppColors.primaryBrown.withOpacity(
+                                        0.3,
+                                      ),
+                                    ),
+                                  ),
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 14,
+                                  ),
+                                ),
+                                maxLines: 2,
+                                textInputAction: TextInputAction.done,
+                                onSubmitted: (_) => _onSubmitTransaction(),
+                              ),
+                              SizedBox(height: size.height * 0.012),
+                              ElevatedButton.icon(
+                                onPressed: _isProcessingSpeech
+                                    ? null
+                                    : () => _onSubmitTransaction(),
+                                icon: const Icon(Icons.send, size: 20),
+                                label: Text(lang.getText('submit')),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppColors.primaryBrown,
+                                  foregroundColor: Colors.white,
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 14,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                ),
+                              ),
+                              SizedBox(height: size.height * 0.01),
+                              Text(
+                                lang.getText('example_inputs'),
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.black54,
+                                ),
+                              ),
+                              SizedBox(height: size.height * 0.005),
+                              Text(
+                                AppLocalizations.of(
+                                  context,
+                                )!.financeExampleExpense,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.black54,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                              Text(
+                                AppLocalizations.of(
+                                  context,
+                                )!.financeExampleAdvance,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.black54,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                              Text(
+                                AppLocalizations.of(
+                                  context,
+                                )!.financeExampleMaterial,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.black54,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                              Text(
+                                AppLocalizations.of(
+                                  context,
+                                )!.financeExampleReceived,
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: Colors.black54,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+
+                    const SizedBox(height: 25),
+
+                    // Total Income Card
+                    _buildFinancialCard(
+                      icon: Icons.account_balance_wallet,
+                      title: lang.getText('total_income'),
+                      amount: "₹ ${_formatCurrency(_totalIncome)}",
+                      changePercent: null,
+                      isPositive: true,
+                      iconBackground: AppColors.cardCream,
+                    ),
+
+                    const SizedBox(height: 15),
+
+                    // Total Expenses Card
+                    _buildFinancialCard(
+                      icon: Icons.shopping_basket,
+                      title: lang.getText('total_expenses'),
+                      amount: "₹ ${_formatCurrency(_totalExpenses)}",
+                      changePercent: null,
+                      isPositive: false,
+                      iconBackground: AppColors.cardCream,
+                    ),
+
+                    const SizedBox(height: 15),
+
+                    // Current Balance Card
+                    _buildFinancialCard(
+                      icon: Icons.account_balance,
+                      title: lang.getText('current_balance'),
+                      amount: "₹ ${_formatCurrency(_currentBalance)}",
+                      changePercent: null,
+                      isPositive: true,
+                      iconBackground: AppColors.cardCream,
+                    ),
+
+                    const SizedBox(height: 30),
+
+                    // Finance Navigation Grid
+                    Text(
+                      lang.getText('finance_management'),
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+
+                    const SizedBox(height: 15),
+
+                    GridView.count(
+                      shrinkWrap: true,
+                      crossAxisCount: 2,
+                      crossAxisSpacing: 15,
+                      mainAxisSpacing: 15,
+                      childAspectRatio: 0.85,
+                      physics: const NeverScrollableScrollPhysics(),
+                      children: [
+                        _buildFinanceCard(
+                          icon: Icons.category,
+                          title: lang.getText('material_tracker'),
+                          subtitle: lang.getText('material_tracker_subtitle'),
+                          onTap: () => context.go('/finance/materials'),
+                        ),
+                        _buildFinanceCard(
+                          icon: Icons.account_balance_wallet,
+                          title: lang.getText('samiti_funds'),
+                          subtitle: lang.getText('samiti_funds_subtitle'),
+                          onTap: () => context.go('/finance/samiti-funds'),
+                        ),
+                        _buildFinanceCard(
+                          icon: Icons.people,
+                          title: lang.getText('worker_funds'),
+                          subtitle: lang.getText('worker_funds_subtitle'),
+                          onTap: () => context.go('/finance/worker-funds'),
+                        ),
+                        _buildFinanceCard(
+                          icon: Icons.person,
+                          title: lang.getText('worker_details'),
+                          subtitle: lang.getText('worker_details_subtitle'),
+                          onTap: () => context.go(
+                            '/finance/worker-details',
+                            extra: {
+                              'name': 'Ramesh',
+                              'category': 'Durga Idol / Claymaking',
+                              'budget': '25000',
+                              'paid': '12000',
+                            },
+                          ),
+                        ),
+                        _buildFinanceCard(
+                          icon: Icons.bar_chart,
+                          title: lang.getText('financial_reports'),
+                          subtitle: lang.getText('financial_reports_subtitle'),
+                          onTap: () => context.go('/finance/reports'),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 30),
+
+                    // Tabs for Pending Payments and Upcoming Deliveries
+                    Row(
+                      children: [
+                        GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              _selectedTab = 0;
+                            });
+                          },
+                          child: Column(
+                            children: [
+                              Text(
+                                lang.getText('pending_payments'),
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                  color: _selectedTab == 0
+                                      ? AppColors.primaryBrown
+                                      : AppColors.textLight,
+                                ),
+                              ),
+                              if (_selectedTab == 0)
+                                Container(
+                                  margin: const EdgeInsets.only(top: 4),
+                                  height: 3,
+                                  width: 120,
+                                  color: AppColors.primaryBrown,
+                                ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 20),
+                        GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              _selectedTab = 1;
+                            });
+                          },
+                          child: Column(
+                            children: [
+                              Text(
+                                lang.getText('upcoming_deliveries'),
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                  color: _selectedTab == 1
+                                      ? AppColors.primaryBrown
+                                      : AppColors.textLight,
+                                ),
+                              ),
+                              if (_selectedTab == 1)
+                                Container(
+                                  margin: const EdgeInsets.only(top: 4),
+                                  height: 3,
+                                  width: 140,
+                                  color: AppColors.primaryBrown,
+                                ),
+                            ],
                           ),
                         ),
                       ],
                     ),
-                  ),
-                  const LanguageToggleAction(),
-                  IconButton(
-                    onPressed: () {},
-                    icon: Icon(Icons.settings, size: size.width * 0.065),
-                  ),
-                ],
-              ),
 
-              SizedBox(height: size.height * 0.01),
-              Text(
-                lang.getText('hello_artisan'),
-                style: TextStyle(
-                  fontSize: (size.width * 0.065).clamp(20.0, 28.0),
-                  fontWeight: FontWeight.bold,
+                    const SizedBox(height: 25),
+
+                    // Pending Payments List
+                    if (_selectedTab == 0) _buildPendingPaymentList(),
+                    if (_selectedTab == 1) _buildUpcomingDeliveriesList(),
+
+                    const SizedBox(height: 80),
+                  ],
                 ),
               ),
-              SizedBox(height: size.height * 0.028),
-              if (!_showManagementView) _buildQuickNavigationChips(),
-              SizedBox(height: size.height * 0.028),
-
-              // Text input for Bengali transaction — submit → GPT → confirm → database → UI
-              LayoutBuilder(
-                builder: (context, constraints) {
-                  final size = MediaQuery.of(context).size;
-                  final pad = size.width * 0.06;
-                  final radius = size.width * 0.06;
-                  return Container(
-                    width: double.infinity,
-                    padding: EdgeInsets.all(pad.clamp(16.0, 28.0)),
-                    decoration: BoxDecoration(
-                      color: AppColors.cardCream,
-                      borderRadius: BorderRadius.circular(radius),
-                    ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Text(
-                          lang.getText('record_voice_note'),
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        SizedBox(height: size.height * 0.012),
-                        TextField(
-                          controller: _transactionInputController,
-                          decoration: InputDecoration(
-                            hintText: lang.getText('type_transaction_bengali'),
-                            hintStyle: TextStyle(
-                              fontSize: 14,
-                              color: Colors.grey.shade600,
-                            ),
-                            filled: true,
-                            fillColor: Colors.white,
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide(
-                                color: AppColors.primaryBrown.withOpacity(0.3),
-                              ),
-                            ),
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 14,
-                            ),
-                          ),
-                          maxLines: 2,
-                          textInputAction: TextInputAction.done,
-                          onSubmitted: (_) => _onSubmitTransaction(),
-                        ),
-                        SizedBox(height: size.height * 0.012),
-                        ElevatedButton.icon(
-                          onPressed: _isProcessingSpeech
-                              ? null
-                              : () => _onSubmitTransaction(),
-                          icon: const Icon(Icons.send, size: 20),
-                          label: Text(lang.getText('submit')),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.primaryBrown,
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                        ),
-                        SizedBox(height: size.height * 0.01),
-                        Text(
-                          lang.getText('example_inputs'),
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: Colors.black54,
-                          ),
-                        ),
-                        SizedBox(height: size.height * 0.005),
-                        Text(
-                          AppLocalizations.of(context)!.financeExampleExpense,
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.black54,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                        Text(
-                          AppLocalizations.of(context)!.financeExampleAdvance,
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.black54,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                        Text(
-                          AppLocalizations.of(context)!.financeExampleMaterial,
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.black54,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                        Text(
-                          AppLocalizations.of(context)!.financeExampleReceived,
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.black54,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
-
-              const SizedBox(height: 25),
-
-              // Total Income Card
-              _buildFinancialCard(
-                icon: Icons.account_balance_wallet,
-                title: lang.getText('total_income'),
-                amount: "₹ ${_formatCurrency(_totalIncome)}",
-                changePercent: null,
-                isPositive: true,
-                iconBackground: AppColors.cardCream,
-              ),
-
-              const SizedBox(height: 15),
-
-              // Total Expenses Card
-              _buildFinancialCard(
-                icon: Icons.shopping_basket,
-                title: lang.getText('total_expenses'),
-                amount: "₹ ${_formatCurrency(_totalExpenses)}",
-                changePercent: null,
-                isPositive: false,
-                iconBackground: AppColors.cardCream,
-              ),
-
-              const SizedBox(height: 15),
-
-              // Current Balance Card
-              _buildFinancialCard(
-                icon: Icons.account_balance,
-                title: lang.getText('current_balance'),
-                amount: "₹ ${_formatCurrency(_currentBalance)}",
-                changePercent: null,
-                isPositive: true,
-                iconBackground: AppColors.cardCream,
-              ),
-
-              const SizedBox(height: 30),
-
-              // Finance Navigation Grid
-              Text(
-                lang.getText('finance_management'),
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-              ),
-
-              const SizedBox(height: 15),
-
-              GridView.count(
-                shrinkWrap: true,
-                crossAxisCount: 2,
-                crossAxisSpacing: 15,
-                mainAxisSpacing: 15,
-                childAspectRatio: 0.85,
-                physics: const NeverScrollableScrollPhysics(),
-                children: [
-                  _buildFinanceCard(
-                    icon: Icons.category,
-                    title: lang.getText('material_tracker'),
-                    subtitle: lang.getText('material_tracker_subtitle'),
-                    onTap: () => context.go('/finance/materials'),
-                  ),
-                  _buildFinanceCard(
-                    icon: Icons.account_balance_wallet,
-                    title: lang.getText('samiti_funds'),
-                    subtitle: lang.getText('samiti_funds_subtitle'),
-                    onTap: () => context.go('/finance/samiti-funds'),
-                  ),
-                  _buildFinanceCard(
-                    icon: Icons.people,
-                    title: lang.getText('worker_funds'),
-                    subtitle: lang.getText('worker_funds_subtitle'),
-                    onTap: () => context.go('/finance/worker-funds'),
-                  ),
-                  _buildFinanceCard(
-                    icon: Icons.person,
-                    title: lang.getText('worker_details'),
-                    subtitle: lang.getText('worker_details_subtitle'),
-                    onTap: () => context.go('/finance/worker-details', extra: {
-                      'name': 'Ramesh',
-                      'category': 'Durga Idol / Claymaking',
-                      'budget': '25000',
-                      'paid': '12000'
-                    }),
-                  ),
-                  _buildFinanceCard(
-                    icon: Icons.bar_chart,
-                    title: lang.getText('financial_reports'),
-                    subtitle: lang.getText('financial_reports_subtitle'),
-                    onTap: () => context.go('/finance/reports'),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 30),
-
-              // Tabs for Pending Payments and Upcoming Deliveries
-              Row(
-              children: [
-              GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        _selectedTab = 0;
-                      });
-                    },
-                    child: Column(
-                      children: [
-                        Text(
-                          lang.getText('pending_payments'),
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: _selectedTab == 0
-                                ? AppColors.primaryBrown
-                                : AppColors.textLight,
-                          ),
-                        ),
-                        if (_selectedTab == 0)
-                          Container(
-                            margin: const EdgeInsets.only(top: 4),
-                            height: 3,
-                            width: 120,
-                            color: AppColors.primaryBrown,
-                          ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 20),
-                  GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        _selectedTab = 1;
-                      });
-                    },
-                    child: Column(
-                      children: [
-                        Text(
-                          lang.getText('upcoming_deliveries'),
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: _selectedTab == 1
-                                ? AppColors.primaryBrown
-                                : AppColors.textLight,
-                          ),
-                        ),
-                        if (_selectedTab == 1)
-                          Container(
-                            margin: const EdgeInsets.only(top: 4),
-                            height: 3,
-                            width: 140,
-                            color: AppColors.primaryBrown,
-                          ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 25),
-
-              // Pending Payments List
-              if (_selectedTab == 0) _buildPendingPaymentList(),
-              if (_selectedTab == 1) _buildUpcomingDeliveriesList(),
-
-              const SizedBox(height: 80),
-            ],
-          ),
-        ),
-      ),
+            ),
           ),
           if (_isProcessingSpeech)
             Positioned.fill(
@@ -738,7 +760,11 @@ class _FinanceHomeScreenState extends State<FinanceHomeScreen> {
               color: iconBackground,
               borderRadius: BorderRadius.circular(size.width * 0.03),
             ),
-            child: Icon(icon, color: AppColors.primaryBrown, size: iconSize * 0.55),
+            child: Icon(
+              icon,
+              color: AppColors.primaryBrown,
+              size: iconSize * 0.55,
+            ),
           ),
           SizedBox(width: pad),
           Expanded(
@@ -788,7 +814,9 @@ class _FinanceHomeScreenState extends State<FinanceHomeScreen> {
 
   Widget _buildPendingPaymentList() {
     // Get clients with pending amounts
-    final pendingClients = DummyData.clients.where((client) => client.pendingAmount > 0).toList();
+    final pendingClients = DummyData.clients
+        .where((client) => client.pendingAmount > 0)
+        .toList();
 
     if (pendingClients.isEmpty) {
       return Center(
@@ -809,7 +837,7 @@ class _FinanceHomeScreenState extends State<FinanceHomeScreen> {
             _buildPendingPaymentItem(
               name: client.name,
               amount: client.pendingAmount,
-              delay: "Pending payment"
+              delay: "Pending payment",
             ),
             const SizedBox(height: 12),
           ],
@@ -906,7 +934,9 @@ class _FinanceHomeScreenState extends State<FinanceHomeScreen> {
     }
 
     // Sort by delivery date
-    upcomingDeliveries.sort((a, b) => a['deliveryDate'].compareTo(b['deliveryDate']));
+    upcomingDeliveries.sort(
+      (a, b) => a['deliveryDate'].compareTo(b['deliveryDate']),
+    );
 
     if (upcomingDeliveries.isEmpty) {
       return Center(
@@ -945,7 +975,8 @@ class _FinanceHomeScreenState extends State<FinanceHomeScreen> {
   }) {
     final now = DateTime.now();
     final daysLeft = deliveryDate.difference(now).inDays;
-    final dateStr = '${deliveryDate.day}/${deliveryDate.month}/${deliveryDate.year}';
+    final dateStr =
+        '${deliveryDate.day}/${deliveryDate.month}/${deliveryDate.year}';
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -1019,7 +1050,7 @@ class _FinanceHomeScreenState extends State<FinanceHomeScreen> {
 
   // Quick Navigation Chips
   Widget _buildQuickNavigationChips() {
-    return Container(
+    return SizedBox(
       height: 40,
       child: ListView(
         scrollDirection: Axis.horizontal,
@@ -1165,10 +1196,7 @@ class _FinanceHomeScreenState extends State<FinanceHomeScreen> {
           const SizedBox(height: 4),
           Text(
             amount,
-            style: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
-            ),
+            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
           ),
         ],
       ),
@@ -1212,10 +1240,7 @@ class _FinanceHomeScreenState extends State<FinanceHomeScreen> {
             const SizedBox(height: 8),
             Text(
               title,
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-              ),
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 4),
             Expanded(
@@ -1223,10 +1248,7 @@ class _FinanceHomeScreenState extends State<FinanceHomeScreen> {
                 subtitle,
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  fontSize: 12,
-                  color: Colors.black54,
-                ),
+                style: const TextStyle(fontSize: 12, color: Colors.black54),
               ),
             ),
           ],

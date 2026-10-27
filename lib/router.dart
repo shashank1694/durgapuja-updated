@@ -39,7 +39,9 @@ final GoRouter router = GoRouter(
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     final currentPath = state.uri.toString();
 
-    print('Router redirect: path=$currentPath, isAuthenticated=${authProvider.isAuthenticated}, isLoading=${authProvider.isLoading}'); // Debug log
+    print(
+      'Router redirect: path=$currentPath, isAuthenticated=${authProvider.isAuthenticated}, isLoading=${authProvider.isLoading}',
+    ); // Debug log
 
     // Don't redirect while auth is loading to avoid race conditions
     if (authProvider.isLoading) {
@@ -52,7 +54,9 @@ final GoRouter router = GoRouter(
         currentPath.startsWith('/auth') ||
         currentPath.startsWith('/sign-in') ||
         currentPath.startsWith('/otp-verification')) {
-      print('Router: Skipping auth, redirecting to /main (demo mode)'); // Debug log
+      print(
+        'Router: Skipping auth, redirecting to /main (demo mode)',
+      ); // Debug log
       return '/main';
     }
 
@@ -73,10 +77,7 @@ final GoRouter router = GoRouter(
       path: '/main',
       builder: (context, state) => const ModuleSelectionScreen(),
     ),
-    GoRoute(
-      path: '/',
-      redirect: (context, state) => '/main',
-    ),
+    GoRoute(path: '/', redirect: (context, state) => '/main'),
     // Finance Module Routes — Index 0: Dashboard, 1: Material Tracker, 2: Samiti, 3: Worker Funds, 4: Reports
     ShellRoute(
       builder: (context, state, child) {
@@ -99,7 +100,10 @@ final GoRouter router = GoRouter(
           customNavItems: const [
             NavItem(icon: Icons.home_outlined, label: 'Dashboard'),
             NavItem(icon: Icons.category, label: 'Material Tracker'),
-            NavItem(icon: Icons.account_balance_wallet_outlined, label: 'Samiti Funds'),
+            NavItem(
+              icon: Icons.account_balance_wallet_outlined,
+              label: 'Samiti Funds',
+            ),
             NavItem(icon: Icons.people_outlined, label: 'Worker Funds'),
             NavItem(icon: Icons.bar_chart_outlined, label: 'Reports'),
           ],
@@ -141,7 +145,8 @@ final GoRouter router = GoRouter(
             final extra = state.extra as Map<String, dynamic>? ?? {};
             return WorkerDetailsScreen(
               workerName: extra['name'] as String? ?? 'Ramesh',
-              category: extra['category'] as String? ?? 'Durga Idol / Claymaking',
+              category:
+                  extra['category'] as String? ?? 'Durga Idol / Claymaking',
               budget: extra['budget'] as String? ?? '25000',
               paid: extra['paid'] as String? ?? '12000',
             );
@@ -158,9 +163,8 @@ final GoRouter router = GoRouter(
         // Orders routes for Finance module
         GoRoute(
           path: '/finance/orders/client/:id',
-          builder: (context, state) => ClientDetailsScreen(
-            clientId: state.pathParameters['id']!,
-          ),
+          builder: (context, state) =>
+              ClientDetailsScreen(clientId: state.pathParameters['id']!),
         ),
         GoRoute(
           path: '/finance/orders/add-client',
@@ -168,21 +172,18 @@ final GoRouter router = GoRouter(
         ),
         GoRoute(
           path: '/finance/orders/client/:id/delivery-dates',
-          builder: (context, state) => DeliveryDatesScreen(
-            clientId: state.pathParameters['id']!,
-          ),
+          builder: (context, state) =>
+              DeliveryDatesScreen(clientId: state.pathParameters['id']!),
         ),
         GoRoute(
           path: '/finance/orders/client/:id/send-update',
-          builder: (context, state) => SendUpdateScreen(
-            clientId: state.pathParameters['id']!,
-          ),
+          builder: (context, state) =>
+              SendUpdateScreen(clientId: state.pathParameters['id']!),
         ),
         GoRoute(
           path: '/finance/orders/client/:id/record-payment',
-          builder: (context, state) => RecordPaymentScreen(
-            clientId: state.pathParameters['id']!,
-          ),
+          builder: (context, state) =>
+              RecordPaymentScreen(clientId: state.pathParameters['id']!),
         ),
       ],
     ),
@@ -226,9 +227,8 @@ final GoRouter router = GoRouter(
         ),
         GoRoute(
           path: '/design/edit/image/:id',
-          builder: (context, state) => ElementEditScreen(
-            originalImage: state.extra as GeneratedImage,
-          ),
+          builder: (context, state) =>
+              ElementEditScreen(originalImage: state.extra as GeneratedImage),
         ),
         GoRoute(
           path: '/design/tap-to-edit',
@@ -240,16 +240,14 @@ final GoRouter router = GoRouter(
         ),
         GoRoute(
           path: '/design/tap-to-edit/image/:id',
-          builder: (context, state) => TapToEditScreen(
-            image: state.extra as GeneratedImage,
-          ),
+          builder: (context, state) =>
+              TapToEditScreen(image: state.extra as GeneratedImage),
         ),
         // Orders routes for Design module (minimal)
         GoRoute(
           path: '/design/orders/client/:id',
-          builder: (context, state) => ClientDetailsScreen(
-            clientId: state.pathParameters['id']!,
-          ),
+          builder: (context, state) =>
+              ClientDetailsScreen(clientId: state.pathParameters['id']!),
         ),
         GoRoute(
           path: '/design/orders/add-client',
@@ -277,18 +275,9 @@ final GoRouter router = GoRouter(
       builder: (context, state) => const OtpVerificationScreen(),
     ),
     // Admin Routes (redirects first so they match before /admin)
-    GoRoute(
-      path: '/admin/users',
-      redirect: (context, state) => '/admin',
-    ),
-    GoRoute(
-      path: '/admin/roles',
-      redirect: (context, state) => '/admin',
-    ),
-    GoRoute(
-      path: '/admin/settings',
-      redirect: (context, state) => '/admin',
-    ),
+    GoRoute(path: '/admin/users', redirect: (context, state) => '/admin'),
+    GoRoute(path: '/admin/roles', redirect: (context, state) => '/admin'),
+    GoRoute(path: '/admin/settings', redirect: (context, state) => '/admin'),
     GoRoute(
       path: '/admin',
       builder: (context, state) => const AdminDashboardScreen(),
@@ -306,7 +295,10 @@ int _getFinanceIndex(String path) {
   if (path.startsWith('/finance/materials')) return 1;
   if (path.startsWith('/finance/samiti-funds')) return 2;
   if (path.startsWith('/finance/worker-funds')) return 3;
-  if (path.startsWith('/finance/reports') || path.startsWith('/finance/ai-logs')) return 4;
+  if (path.startsWith('/finance/reports') ||
+      path.startsWith('/finance/ai-logs')) {
+    return 4;
+  }
   return 0;
 }
 
@@ -314,12 +306,18 @@ int _getDesignIndex(String path) {
   if (path == '/design/dashboard') {
     return 0;
   }
-  if (path.startsWith('/design/welcome') || path.startsWith('/design/create') ||
-      path.startsWith('/design/edit') || path.startsWith('/design/image-to-image') ||
-      path.startsWith('/design/tap-to-edit') || path.startsWith('/design/idea-generation') ||
-      path.startsWith('/design/sculpting') || path.startsWith('/design/detailing') ||
-      path.startsWith('/design/preview') || path.startsWith('/design/backdrop') ||
-      path.startsWith('/design/lighting') || path.startsWith('/design/orders') ||
+  if (path.startsWith('/design/welcome') ||
+      path.startsWith('/design/create') ||
+      path.startsWith('/design/edit') ||
+      path.startsWith('/design/image-to-image') ||
+      path.startsWith('/design/tap-to-edit') ||
+      path.startsWith('/design/idea-generation') ||
+      path.startsWith('/design/sculpting') ||
+      path.startsWith('/design/detailing') ||
+      path.startsWith('/design/preview') ||
+      path.startsWith('/design/backdrop') ||
+      path.startsWith('/design/lighting') ||
+      path.startsWith('/design/orders') ||
       path.startsWith('/design/reports')) {
     return 1;
   }

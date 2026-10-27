@@ -29,139 +29,139 @@ class _DesignWelcomeScreenState extends State<DesignWelcomeScreen> {
           ),
           title: Text(lang.getText('welcome_artisan')),
           elevation: 0,
-          actions: const [
-            LanguageToggleAction(),
-          ],
+          actions: const [LanguageToggleAction()],
         ),
         body: SingleChildScrollView(
-        padding: const EdgeInsets.all(AppConstants.defaultPadding),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Welcome section
-            Container(
-              padding: const EdgeInsets.all(AppConstants.largePadding),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(AppConstants.largeRadius),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
+          padding: const EdgeInsets.all(AppConstants.defaultPadding),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Welcome section
+              Container(
+                padding: const EdgeInsets.all(AppConstants.largePadding),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(AppConstants.largeRadius),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  children: [
+                    Icon(
+                      Icons.design_services_outlined,
+                      size: 64,
+                      color: AppColors.primaryBrown,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      lang.getText('durga_idol_design_studio'),
+                      style: TextStyle(
+                        fontSize: AppConstants.fontSizeLarge,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.textDark,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      lang.getText('create_beautiful_with_ai'),
+                      style: TextStyle(
+                        fontSize: AppConstants.fontSizeBody,
+                        color: AppColors.textLight,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
               ),
-              child: Column(
+              const SizedBox(height: AppConstants.largePadding),
+
+              // Main options
+              Text(
+                lang.getText('choose_design_path'),
+                style: TextStyle(
+                  fontSize: AppConstants.fontSizeLarge,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textDark,
+                ),
+              ),
+              const SizedBox(height: AppConstants.mediumPadding),
+
+              Column(
                 children: [
-                  Icon(
-                    Icons.design_services_outlined,
-                    size: 64,
+                  _buildMainOption(
+                    icon: Icons.auto_awesome,
+                    title: lang.getText('create_new_design'),
+                    subtitle: lang.getText('new_design_subtitle'),
+                    onTap: () => context.push('/design/create'),
                     color: AppColors.primaryBrown,
                   ),
-                  const SizedBox(height: 16),
-                  Text(
-                    lang.getText('durga_idol_design_studio'),
-                    style: TextStyle(
-                      fontSize: AppConstants.fontSizeLarge,
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.textDark,
-                    ),
-                    textAlign: TextAlign.center,
+                  const SizedBox(height: AppConstants.mediumPadding),
+                  _buildMainOption(
+                    icon: Icons.image_search,
+                    title: lang.getText('image_to_image'),
+                    subtitle: lang.getText('image_to_image_subtitle'),
+                    onTap: () => context.push('/design/image-to-image'),
+                    color: AppColors.accentOrange,
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    lang.getText('create_beautiful_with_ai'),
-                    style: TextStyle(
-                      fontSize: AppConstants.fontSizeBody,
-                      color: AppColors.textLight,
-                    ),
-                    textAlign: TextAlign.center,
+                  const SizedBox(height: AppConstants.mediumPadding),
+                  _buildMainOption(
+                    icon: Icons.edit_outlined,
+                    title: lang.getText('edit_existing_design'),
+                    subtitle: lang.getText('edit_existing_subtitle'),
+                    onTap: () => context.go('/design/edit'),
+                    color: AppColors.primaryBrown,
+                  ),
+                  const SizedBox(height: AppConstants.mediumPadding),
+                  _buildMainOption(
+                    icon: Icons.touch_app,
+                    title: lang.getText('tap_to_edit'),
+                    subtitle: lang.getText('tap_to_edit_subtitle'),
+                    onTap: () => context.go('/design/tap-to-edit'),
+                    color: AppColors.accentOrange,
                   ),
                 ],
               ),
-            ),
-            const SizedBox(height: AppConstants.largePadding),
 
-            // Main options
-            Text(
-              lang.getText('choose_design_path'),
-              style: TextStyle(
-                fontSize: AppConstants.fontSizeLarge,
-                fontWeight: FontWeight.w600,
-                color: AppColors.textDark,
-              ),
-            ),
-            const SizedBox(height: AppConstants.mediumPadding),
+              const SizedBox(height: AppConstants.largePadding),
 
-            Column(
-              children: [
-                _buildMainOption(
-                  icon: Icons.auto_awesome,
-                  title: lang.getText('create_new_design'),
-                  subtitle: lang.getText('new_design_subtitle'),
-                  onTap: () => context.push('/design/create'),
-                  color: AppColors.primaryBrown,
-                ),
-                const SizedBox(height: AppConstants.mediumPadding),
-                _buildMainOption(
-                  icon: Icons.image_search,
-                  title: lang.getText('image_to_image'),
-                  subtitle: lang.getText('image_to_image_subtitle'),
-                  onTap: () => context.push('/design/image-to-image'),
-                  color: AppColors.accentOrange,
-                ),
-                const SizedBox(height: AppConstants.mediumPadding),
-                _buildMainOption(
-                  icon: Icons.edit_outlined,
-                  title: lang.getText('edit_existing_design'),
-                  subtitle: lang.getText('edit_existing_subtitle'),
-                  onTap: () => context.go('/design/edit'),
-                  color: AppColors.primaryBrown,
-                ),
-                const SizedBox(height: AppConstants.mediumPadding),
-                _buildMainOption(
-                  icon: Icons.touch_app,
-                  title: lang.getText('tap_to_edit'),
-                  subtitle: lang.getText('tap_to_edit_subtitle'),
-                  onTap: () => context.go('/design/tap-to-edit'),
-                  color: AppColors.accentOrange,
-                ),
-              ],
-            ),
-
-            const SizedBox(height: AppConstants.largePadding),
-
-            // Quick tips
-            Container(
-              padding: const EdgeInsets.all(AppConstants.mediumPadding),
-              decoration: BoxDecoration(
-                color: AppColors.cardCream,
-                borderRadius: BorderRadius.circular(AppConstants.borderRadius),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    lang.getText('design_tips'),
-                    style: TextStyle(
-                      fontSize: AppConstants.fontSizeMedium,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textDark,
-                    ),
+              // Quick tips
+              Container(
+                padding: const EdgeInsets.all(AppConstants.mediumPadding),
+                decoration: BoxDecoration(
+                  color: AppColors.cardCream,
+                  borderRadius: BorderRadius.circular(
+                    AppConstants.borderRadius,
                   ),
-                  const SizedBox(height: 8),
-                  _buildTip(lang.getText('tip_descriptive')),
-                  _buildTip(lang.getText('tip_voice')),
-                  _buildTip(lang.getText('tip_upload')),
-                  _buildTip(lang.getText('tip_tap_edit')),
-                  _buildTip(lang.getText('tip_experiment')),
-                ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      lang.getText('design_tips'),
+                      style: TextStyle(
+                        fontSize: AppConstants.fontSizeMedium,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.textDark,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    _buildTip(lang.getText('tip_descriptive')),
+                    _buildTip(lang.getText('tip_voice')),
+                    _buildTip(lang.getText('tip_upload')),
+                    _buildTip(lang.getText('tip_tap_edit')),
+                    _buildTip(lang.getText('tip_experiment')),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
-      ),
       ),
     );
   }
@@ -191,10 +191,7 @@ class _DesignWelcomeScreenState extends State<DesignWelcomeScreen> {
               offset: const Offset(0, 2),
             ),
           ],
-          border: Border.all(
-            color: color.withOpacity(0.2),
-            width: 1,
-          ),
+          border: Border.all(color: color.withOpacity(0.2), width: 1),
         ),
         child: Row(
           children: [
@@ -204,11 +201,7 @@ class _DesignWelcomeScreenState extends State<DesignWelcomeScreen> {
                 color: color.withOpacity(0.1),
                 shape: BoxShape.circle,
               ),
-              child: Icon(
-                icon,
-                size: 40,
-                color: color,
-              ),
+              child: Icon(icon, size: 40, color: color),
             ),
             const SizedBox(width: 16),
             Expanded(
@@ -235,11 +228,7 @@ class _DesignWelcomeScreenState extends State<DesignWelcomeScreen> {
                 ],
               ),
             ),
-            Icon(
-              Icons.arrow_forward_ios,
-              size: 20,
-              color: AppColors.textLight,
-            ),
+            Icon(Icons.arrow_forward_ios, size: 20, color: AppColors.textLight),
           ],
         ),
       ),

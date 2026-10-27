@@ -24,12 +24,42 @@ class _MyConceptsScreenState extends State<MyConceptsScreen> {
   bool _loading = true;
 
   static const List<Map<String, String>> _demoConcepts = [
-    {'title': 'Divine Durga', 'date': 'Created on 2024-07-20', 'image': 'assets/images/durga_1.jpg', 'id': 'demo_1'},
-    {'title': 'Traditional Durga', 'date': 'Created on 2024-07-15', 'image': 'assets/images/durga_2.jpg', 'id': 'demo_2'},
-    {'title': 'Modern Durga', 'date': 'Created on 2024-07-10', 'image': 'assets/images/durga_3.jpg', 'id': 'demo_3'},
-    {'title': 'Eco-Friendly Durga', 'date': 'Created on 2024-07-05', 'image': 'assets/images/durga_4.jpg', 'id': 'demo_4'},
-    {'title': 'Minimalist Durga', 'date': 'Created on 2024-06-30', 'image': 'assets/images/durga_5.jpg', 'id': 'demo_5'},
-    {'title': 'Gold Durga', 'date': 'Created on 2024-06-25', 'image': 'assets/images/durga_6.jpg', 'id': 'demo_6'},
+    {
+      'title': 'Divine Durga',
+      'date': 'Created on 2024-07-20',
+      'image': 'assets/images/durga_1.jpg',
+      'id': 'demo_1',
+    },
+    {
+      'title': 'Traditional Durga',
+      'date': 'Created on 2024-07-15',
+      'image': 'assets/images/durga_2.jpg',
+      'id': 'demo_2',
+    },
+    {
+      'title': 'Modern Durga',
+      'date': 'Created on 2024-07-10',
+      'image': 'assets/images/durga_3.jpg',
+      'id': 'demo_3',
+    },
+    {
+      'title': 'Eco-Friendly Durga',
+      'date': 'Created on 2024-07-05',
+      'image': 'assets/images/durga_4.jpg',
+      'id': 'demo_4',
+    },
+    {
+      'title': 'Minimalist Durga',
+      'date': 'Created on 2024-06-30',
+      'image': 'assets/images/durga_5.jpg',
+      'id': 'demo_5',
+    },
+    {
+      'title': 'Gold Durga',
+      'date': 'Created on 2024-06-25',
+      'image': 'assets/images/durga_6.jpg',
+      'id': 'demo_6',
+    },
   ];
 
   final List<String> _themes = [
@@ -37,13 +67,13 @@ class _MyConceptsScreenState extends State<MyConceptsScreen> {
     'Divine',
     'Traditional',
     'Modern',
-    'Eco-Friendly'
+    'Eco-Friendly',
   ];
   final List<String> _dates = [
     'All',
     'This Month',
     'Last Month',
-    'Last 3 Months'
+    'Last 3 Months',
   ];
 
   @override
@@ -57,12 +87,16 @@ class _MyConceptsScreenState extends State<MyConceptsScreen> {
     if (mounted) {
       setState(() {
         _concepts = [
-          ...saved.map((m) => {
-            'id': m['id'] ?? m['title'] ?? '',
-            'title': m['title'] ?? 'Untitled',
-            'date': m['date'] ?? 'Created on ${DateTime.now().toString().substring(0, 10)}',
-            'image': m['image'] ?? '',
-          }),
+          ...saved.map(
+            (m) => {
+              'id': m['id'] ?? m['title'] ?? '',
+              'title': m['title'] ?? 'Untitled',
+              'date':
+                  m['date'] ??
+                  'Created on ${DateTime.now().toString().substring(0, 10)}',
+              'image': m['image'] ?? '',
+            },
+          ),
           ..._demoConcepts,
         ];
         _loading = false;
@@ -90,94 +124,93 @@ class _MyConceptsScreenState extends State<MyConceptsScreen> {
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
-        padding: const EdgeInsets.all(AppConstants.mediumPadding),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            TextField(
-              controller: _searchController,
-              decoration: InputDecoration(
-                hintText: lang.getText('search_concepts'),
-                prefixIcon: const Icon(Icons.search),
-                suffixIcon: IconButton(
-                  icon: const Icon(Icons.mic_outlined),
-                  onPressed: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('🎙️ Voice search'),
-                      ),
-                    );
-                  },
-                ),
-                filled: true,
-                fillColor: AppColors.cardCream,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(
-                    AppConstants.borderRadius,
-                  ),
-                  borderSide: BorderSide.none,
-                ),
-              ),
-            ),
-            const SizedBox(height: AppConstants.largePadding),
-            Text(
-              lang.getText('filters'),
-              style: const TextStyle(
-                fontSize: AppConstants.fontSizeBody,
-                fontWeight: FontWeight.w600,
-                color: AppColors.textDark,
-              ),
-            ),
-            const SizedBox(height: AppConstants.mediumPadding),
-            Row(
-              children: [
-                Expanded(
-                  child: _buildDropdownFilter(
-                    lang.getText('theme'),
-                    _selectedTheme,
-                    _themes,
-                    (value) {
-                      setState(() {
-                        _selectedTheme = value!;
-                      });
-                    },
-                  ),
-                ),
-                const SizedBox(width: AppConstants.mediumPadding),
-                Expanded(
-                  child: _buildDropdownFilter(
-                    lang.getText('date'),
-                    _selectedDate,
-                    _dates,
-                    (value) {
-                      setState(() {
-                        _selectedDate = value!;
-                      });
-                    },
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: AppConstants.mediumPadding),
-            GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
               padding: const EdgeInsets.all(AppConstants.mediumPadding),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                crossAxisSpacing: AppConstants.mediumPadding,
-                mainAxisSpacing: AppConstants.mediumPadding,
-                childAspectRatio: 0.75,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  TextField(
+                    controller: _searchController,
+                    decoration: InputDecoration(
+                      hintText: lang.getText('search_concepts'),
+                      prefixIcon: const Icon(Icons.search),
+                      suffixIcon: IconButton(
+                        icon: const Icon(Icons.mic_outlined),
+                        onPressed: () {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('🎙️ Voice search')),
+                          );
+                        },
+                      ),
+                      filled: true,
+                      fillColor: AppColors.cardCream,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(
+                          AppConstants.borderRadius,
+                        ),
+                        borderSide: BorderSide.none,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: AppConstants.largePadding),
+                  Text(
+                    lang.getText('filters'),
+                    style: const TextStyle(
+                      fontSize: AppConstants.fontSizeBody,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textDark,
+                    ),
+                  ),
+                  const SizedBox(height: AppConstants.mediumPadding),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildDropdownFilter(
+                          lang.getText('theme'),
+                          _selectedTheme,
+                          _themes,
+                          (value) {
+                            setState(() {
+                              _selectedTheme = value!;
+                            });
+                          },
+                        ),
+                      ),
+                      const SizedBox(width: AppConstants.mediumPadding),
+                      Expanded(
+                        child: _buildDropdownFilter(
+                          lang.getText('date'),
+                          _selectedDate,
+                          _dates,
+                          (value) {
+                            setState(() {
+                              _selectedDate = value!;
+                            });
+                          },
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: AppConstants.mediumPadding),
+                  GridView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    padding: const EdgeInsets.all(AppConstants.mediumPadding),
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          crossAxisSpacing: AppConstants.mediumPadding,
+                          mainAxisSpacing: AppConstants.mediumPadding,
+                          childAspectRatio: 0.75,
+                        ),
+                    itemCount: _concepts.length,
+                    itemBuilder: (context, index) {
+                      final concept = _concepts[index];
+                      return _buildConceptCard(concept);
+                    },
+                  ),
+                ],
               ),
-              itemCount: _concepts.length,
-              itemBuilder: (context, index) {
-                final concept = _concepts[index];
-                return _buildConceptCard(concept);
-              },
             ),
-          ],
-        ),
-      ),
     );
   }
 
@@ -195,9 +228,9 @@ class _MyConceptsScreenState extends State<MyConceptsScreen> {
     await _conceptsStore.removeConcept(id);
     await _loadConcepts();
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Removed ${concept['title']}')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Removed ${concept['title']}')));
     }
   }
 
@@ -220,10 +253,7 @@ class _MyConceptsScreenState extends State<MyConceptsScreen> {
         isExpanded: true,
         underline: const SizedBox(),
         items: items.map((String item) {
-          return DropdownMenuItem<String>(
-            value: item,
-            child: Text(item),
-          );
+          return DropdownMenuItem<String>(value: item, child: Text(item));
         }).toList(),
         onChanged: onChanged,
       ),
@@ -314,63 +344,60 @@ class _MyConceptsScreenState extends State<MyConceptsScreen> {
                   gradient: LinearGradient(
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
-                    colors: [
-                      Colors.transparent,
-                      Colors.black.withOpacity(0.7),
-                    ],
+                    colors: [Colors.transparent, Colors.black.withOpacity(0.7)],
                   ),
                 ),
               ),
               Positioned(
                 bottom: 0,
-              left: 0,
-              right: 0,
-              child: Padding(
-                padding: const EdgeInsets.all(AppConstants.mediumPadding),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      concept['title']!,
-                      style: const TextStyle(
-                        fontSize: AppConstants.fontSizeBody,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white,
+                left: 0,
+                right: 0,
+                child: Padding(
+                  padding: const EdgeInsets.all(AppConstants.mediumPadding),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        concept['title']!,
+                        style: const TextStyle(
+                          fontSize: AppConstants.fontSizeBody,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      concept['date']!.replaceAll('Created on ', ''),
-                      style: const TextStyle(
-                        fontSize: AppConstants.fontSizeSmall,
-                        color: Colors.white70,
+                      const SizedBox(height: 4),
+                      Text(
+                        concept['date']!.replaceAll('Created on ', ''),
+                        style: const TextStyle(
+                          fontSize: AppConstants.fontSizeSmall,
+                          color: Colors.white70,
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            Positioned(
-              top: 8,
-              right: 8,
-              child: GestureDetector(
-                onTap: () => _removeConcept(concept),
-                child: Container(
-                  padding: const EdgeInsets.all(4),
-                  decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.5),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.close,
-                    color: Colors.white,
-                    size: 16,
+                    ],
                   ),
                 ),
               ),
-            ),
+              Positioned(
+                top: 8,
+                right: 8,
+                child: GestureDetector(
+                  onTap: () => _removeConcept(concept),
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withOpacity(0.5),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.close,
+                      color: Colors.white,
+                      size: 16,
+                    ),
+                  ),
+                ),
+              ),
             ],
           ),
         ),
@@ -384,9 +411,13 @@ class _MyConceptsScreenState extends State<MyConceptsScreen> {
       return Image.network(
         imageUrl,
         fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) => Container(
+        errorBuilder: (_, _, _) => Container(
           color: AppColors.darkBrown,
-          child: const Icon(Icons.image_not_supported, color: Colors.white38, size: 48),
+          child: const Icon(
+            Icons.image_not_supported,
+            color: Colors.white38,
+            size: 48,
+          ),
         ),
       );
     }
@@ -394,9 +425,13 @@ class _MyConceptsScreenState extends State<MyConceptsScreen> {
       return Image.asset(
         imageUrl,
         fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) => Container(
+        errorBuilder: (_, _, _) => Container(
           color: AppColors.darkBrown,
-          child: const Icon(Icons.image_outlined, color: Colors.white38, size: 48),
+          child: const Icon(
+            Icons.image_outlined,
+            color: Colors.white38,
+            size: 48,
+          ),
         ),
       );
     }

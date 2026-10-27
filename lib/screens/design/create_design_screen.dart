@@ -18,18 +18,19 @@ class CreateDesignScreen extends StatefulWidget {
   State<CreateDesignScreen> createState() => _CreateDesignScreenState();
 }
 
-class _CreateDesignScreenState extends State<CreateDesignScreen> with SingleTickerProviderStateMixin {
+class _CreateDesignScreenState extends State<CreateDesignScreen>
+    with SingleTickerProviderStateMixin {
   final TextEditingController _promptController = TextEditingController();
   final ImagePicker _imagePicker = ImagePicker();
   final OpenAIImageService _openAIImageService = OpenAIImageService();
   final KreaAIService _kreaService = KreaAIService();
   final List<File> _referenceImages = [];
-  
+
   late stt.SpeechToText _speechToText;
   bool _isListening = false;
   bool _isGenerating = false;
   String _confidence = '';
-  
+
   late AnimationController _pulseController;
   late Animation<double> _pulseAnimation;
 
@@ -38,12 +39,12 @@ class _CreateDesignScreenState extends State<CreateDesignScreen> with SingleTick
     super.initState();
     _speechToText = stt.SpeechToText();
     _initializeSpeech();
-    
+
     _pulseController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1000),
     )..repeat(reverse: true);
-    
+
     _pulseAnimation = Tween<double>(begin: 1.0, end: 1.2).animate(
       CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
     );
@@ -89,7 +90,14 @@ class _CreateDesignScreenState extends State<CreateDesignScreen> with SingleTick
   Future<void> _pickImageFromGallery() async {
     if (_referenceImages.length >= 3) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(Provider.of<LanguageService>(context, listen: false).getText('max_3_images'))),
+        SnackBar(
+          content: Text(
+            Provider.of<LanguageService>(
+              context,
+              listen: false,
+            ).getText('max_3_images'),
+          ),
+        ),
       );
       return;
     }
@@ -109,7 +117,14 @@ class _CreateDesignScreenState extends State<CreateDesignScreen> with SingleTick
   Future<void> _pickImageFromCamera() async {
     if (_referenceImages.length >= 3) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(Provider.of<LanguageService>(context, listen: false).getText('max_3_images'))),
+        SnackBar(
+          content: Text(
+            Provider.of<LanguageService>(
+              context,
+              listen: false,
+            ).getText('max_3_images'),
+          ),
+        ),
       );
       return;
     }
@@ -137,7 +152,10 @@ class _CreateDesignScreenState extends State<CreateDesignScreen> with SingleTick
     if (s.contains('OpenAI API key missing') || s.contains('api_keys.dart')) {
       return 'API key missing. Set ApiKeys.openAIKey in lib/config/api_keys.dart (for reference-image generation).';
     }
-    if (s.contains('<html') || s.contains('<!doctype') || s.contains('401') || s.contains('403')) {
+    if (s.contains('<html') ||
+        s.contains('<!doctype') ||
+        s.contains('401') ||
+        s.contains('403')) {
       return 'Server error. Check your API key and try again.';
     }
     if (s.length > 120) return '${s.substring(0, 117)}...';
@@ -147,7 +165,14 @@ class _CreateDesignScreenState extends State<CreateDesignScreen> with SingleTick
   Future<void> _generateImage() async {
     if (_promptController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(Provider.of<LanguageService>(context, listen: false).getText('please_enter_prompt'))),
+        SnackBar(
+          content: Text(
+            Provider.of<LanguageService>(
+              context,
+              listen: false,
+            ).getText('please_enter_prompt'),
+          ),
+        ),
       );
       return;
     }
@@ -156,7 +181,7 @@ class _CreateDesignScreenState extends State<CreateDesignScreen> with SingleTick
 
     try {
       GeneratedImage generatedImage;
-      
+
       if (_referenceImages.isNotEmpty) {
         // Only this flow uses OpenAI (reference image + prompt).
         generatedImage = await _openAIImageService.generateImageWithReference(
@@ -164,7 +189,9 @@ class _CreateDesignScreenState extends State<CreateDesignScreen> with SingleTick
           prompt: _promptController.text.trim(),
         );
       } else {
-        generatedImage = await _kreaService.generateImage(_promptController.text.trim());
+        generatedImage = await _kreaService.generateImage(
+          _promptController.text.trim(),
+        );
       }
 
       if (mounted) {
@@ -211,34 +238,37 @@ class _CreateDesignScreenState extends State<CreateDesignScreen> with SingleTick
             lang.getText('durga_idol_designer'),
             style: const TextStyle(fontWeight: FontWeight.bold),
           ),
-          actions: const [
-            LanguageToggleAction(),
-          ],
+          actions: const [LanguageToggleAction()],
         ),
         body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(20, 20, 20, 160), // Increased bottom padding to prevent navbar overlap
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _buildHeaderSection(lang),
-              const SizedBox(height: 24),
-              _buildPromptSection(lang),
-              const SizedBox(height: 24),
-              _buildReferenceImagesSection(lang),
-              const SizedBox(height: 32),
-              _buildGenerateButton(lang),
-              const SizedBox(height: 16),
-              _buildQuickPrompts(lang),
-              // Additional content to ensure the page is scrollable and button is accessible
-              const SizedBox(height: 40),
-              _buildAccessibilityInfo(lang),
-              const SizedBox(height: 60),
-              _buildAdditionalContent(lang),
-            ],
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(
+              20,
+              20,
+              20,
+              160,
+            ), // Increased bottom padding to prevent navbar overlap
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _buildHeaderSection(lang),
+                const SizedBox(height: 24),
+                _buildPromptSection(lang),
+                const SizedBox(height: 24),
+                _buildReferenceImagesSection(lang),
+                const SizedBox(height: 32),
+                _buildGenerateButton(lang),
+                const SizedBox(height: 16),
+                _buildQuickPrompts(lang),
+                // Additional content to ensure the page is scrollable and button is accessible
+                const SizedBox(height: 40),
+                _buildAccessibilityInfo(lang),
+                const SizedBox(height: 60),
+                _buildAdditionalContent(lang),
+              ],
+            ),
           ),
         ),
-      ),
       ),
     );
   }
@@ -250,11 +280,7 @@ class _CreateDesignScreenState extends State<CreateDesignScreen> with SingleTick
         padding: const EdgeInsets.all(20),
         child: Column(
           children: [
-            const Icon(
-              Icons.auto_awesome,
-              size: 48,
-              color: Colors.white,
-            ),
+            const Icon(Icons.auto_awesome, size: 48, color: Colors.white),
             const SizedBox(height: 12),
             Text(
               lang.getText('create_your_durga_idol'),
@@ -313,7 +339,10 @@ class _CreateDesignScreenState extends State<CreateDesignScreen> with SingleTick
                         ),
                       )
                     : IconButton(
-                        icon: const Icon(Icons.mic_none, color: Color(0xFFFF6B35)),
+                        icon: const Icon(
+                          Icons.mic_none,
+                          color: Color(0xFFFF6B35),
+                        ),
                         onPressed: _startListening,
                       ),
               ),
@@ -323,10 +352,7 @@ class _CreateDesignScreenState extends State<CreateDesignScreen> with SingleTick
                 padding: const EdgeInsets.only(top: 8),
                 child: Text(
                   '${lang.getText('confidence_label')}: $_confidence%',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey.shade600,
-                  ),
+                  style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
                 ),
               ),
           ],
@@ -356,20 +382,14 @@ class _CreateDesignScreenState extends State<CreateDesignScreen> with SingleTick
                 const Spacer(),
                 Text(
                   '${_referenceImages.length}/3',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey.shade600,
-                  ),
+                  style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
                 ),
               ],
             ),
             const SizedBox(height: 12),
             Text(
               lang.getText('reference_images_help'),
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey.shade600,
-              ),
+              style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
             ),
             const SizedBox(height: 16),
             SizedBox(
@@ -460,10 +480,7 @@ class _CreateDesignScreenState extends State<CreateDesignScreen> with SingleTick
           width: 100,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(12),
-            image: DecorationImage(
-              image: FileImage(image),
-              fit: BoxFit.cover,
-            ),
+            image: DecorationImage(image: FileImage(image), fit: BoxFit.cover),
           ),
         ),
         Positioned(
@@ -477,11 +494,7 @@ class _CreateDesignScreenState extends State<CreateDesignScreen> with SingleTick
                 color: Colors.black.withOpacity(0.6),
                 shape: BoxShape.circle,
               ),
-              child: const Icon(
-                Icons.close,
-                size: 16,
-                color: Colors.white,
-              ),
+              child: const Icon(Icons.close, size: 16, color: Colors.white),
             ),
           ),
         ),
@@ -496,9 +509,7 @@ class _CreateDesignScreenState extends State<CreateDesignScreen> with SingleTick
         backgroundColor: const Color(0xFFFF6B35),
         foregroundColor: Colors.white,
         padding: const EdgeInsets.symmetric(vertical: 18),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       ),
       child: _isGenerating
           ? const SizedBox(
@@ -603,24 +614,22 @@ class _CreateDesignScreenState extends State<CreateDesignScreen> with SingleTick
                 const SizedBox(width: 8),
                 Text(
                   lang.getText('scroll_for_button'),
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey.shade600,
-                  ),
+                  style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
                 ),
               ],
             ),
             const SizedBox(height: 8),
             Row(
               children: [
-                const Icon(Icons.arrow_downward, size: 16, color: Color(0xFFFF6B35)),
+                const Icon(
+                  Icons.arrow_downward,
+                  size: 16,
+                  color: Color(0xFFFF6B35),
+                ),
                 const SizedBox(width: 8),
                 Text(
                   lang.getText('page_scrollable'),
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey.shade600,
-                  ),
+                  style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
                 ),
               ],
             ),
@@ -654,10 +663,7 @@ class _CreateDesignScreenState extends State<CreateDesignScreen> with SingleTick
             const SizedBox(height: 12),
             Text(
               lang.getText('best_results_include'),
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey.shade700,
-              ),
+              style: TextStyle(fontSize: 14, color: Colors.grey.shade700),
             ),
             const SizedBox(height: 8),
             Row(
@@ -666,10 +672,7 @@ class _CreateDesignScreenState extends State<CreateDesignScreen> with SingleTick
                 const SizedBox(width: 12),
                 Text(
                   lang.getText('specific_materials'),
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey.shade600,
-                  ),
+                  style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
                 ),
               ],
             ),
@@ -680,10 +683,7 @@ class _CreateDesignScreenState extends State<CreateDesignScreen> with SingleTick
                 const SizedBox(width: 12),
                 Text(
                   lang.getText('color_schemes'),
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey.shade600,
-                  ),
+                  style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
                 ),
               ],
             ),
@@ -694,10 +694,7 @@ class _CreateDesignScreenState extends State<CreateDesignScreen> with SingleTick
                 const SizedBox(width: 12),
                 Text(
                   lang.getText('traditional_vs_modern'),
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey.shade600,
-                  ),
+                  style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
                 ),
               ],
             ),
@@ -708,10 +705,7 @@ class _CreateDesignScreenState extends State<CreateDesignScreen> with SingleTick
                 const SizedBox(width: 12),
                 Text(
                   lang.getText('cultural_elements'),
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey.shade600,
-                  ),
+                  style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
                 ),
               ],
             ),

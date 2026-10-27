@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 import '../../models/generated_image.dart';
 import '../../models/editable_element.dart';
 import '../../services/tap_to_edit_service.dart';
+import '../../services/replicate_sam_service.dart';
 import '../../services/speech_service.dart';
 import '../../services/language_service.dart';
 import '../../utils/colors.dart';
@@ -25,45 +26,91 @@ class TapToEditScreen extends StatefulWidget {
   State<TapToEditScreen> createState() => _TapToEditScreenState();
 }
 
-class _TapToEditScreenState extends State<TapToEditScreen> {
+class _TapToEditScreenState extends State<TapToEditScreen>
+    with TickerProviderStateMixin {
   final TapToEditService _tapToEditService = TapToEditService();
+  final ReplicateSAMService _samService = ReplicateSAMService();
   final SpeechService _speechService = SpeechService();
   final TextEditingController _promptController = TextEditingController();
   final ImagePicker _picker = ImagePicker();
-  
+
+  // Interactive zoom & snapping controllers
+  late final TransformationController _transformationController;
+  late final AnimationController _zoomAnimationController;
+  Animation<Matrix4>? _zoomAnimation;
+  late final AnimationController _pulseController;
+  late final Animation<double> _pulseAnimation;
+
+  double _currentScale = 1.0;
+  bool _isSnapping = false;
+  String? _maskImageUrl;
+  Offset? _lastTapFocusPoint;
+
   GeneratedImage? _currentImage;
   bool _isEditing = false;
   bool _showEditPanel = false;
   bool _showImageSourceOptions = false;
   bool _isTracing = false;
   bool _showConfirmSelection = false;
-  
+
   // Freehand tracing state
   List<Offset> _tracePoints = [];
   List<List<Offset>> _completedTraces = [];
   Path? _currentTracePath;
-  
+
   double _imageWidth = 0;
   double _imageHeight = 0;
-  Offset _imageOffset = Offset.zero; // Image top-left in container space for coordinate conversion
+  Offset _imageOffset = Offset
+      .zero; // Image top-left in container space for coordinate conversion
   ElementType? _selectedElementType;
   final GlobalKey _imageKey = GlobalKey();
   final GlobalKey _containerKey = GlobalKey();
-  
+
   @override
   void initState() {
     super.initState();
     _currentImage = widget.image;
-    
+
+    _transformationController = TransformationController();
+    _transformationController.addListener(_onTransformationChanged);
+
+    _zoomAnimationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 380),
+    );
+    _zoomAnimationController.addListener(() {
+      if (_zoomAnimation != null) {
+        _transformationController.value = _zoomAnimation!.value;
+      }
+    });
+
+    _pulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+    )..repeat(reverse: true);
+    _pulseAnimation = Tween<double>(begin: 0.85, end: 1.25).animate(
+      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
+    );
+
     // Get image dimensions after the frame is built
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _getImageDimensions();
     });
   }
 
+  void _onTransformationChanged() {
+    final scale = _transformationController.value.getMaxScaleOnAxis();
+    if ((scale - _currentScale).abs() > 0.05) {
+      setState(() {
+        _currentScale = scale;
+      });
+    }
+  }
+
   void _getImageDimensions() {
     final imageBox = _imageKey.currentContext?.findRenderObject() as RenderBox?;
-    final containerBox = _containerKey.currentContext?.findRenderObject() as RenderBox?;
+    final containerBox =
+        _containerKey.currentContext?.findRenderObject() as RenderBox?;
     if (imageBox != null && containerBox != null) {
       setState(() {
         _imageWidth = imageBox.size.width;
@@ -76,6 +123,10 @@ class _TapToEditScreenState extends State<TapToEditScreen> {
 
   @override
   void dispose() {
+    _transformationController.removeListener(_onTransformationChanged);
+    _transformationController.dispose();
+    _zoomAnimationController.dispose();
+    _pulseController.dispose();
     _promptController.dispose();
     super.dispose();
   }
@@ -87,7 +138,14 @@ class _TapToEditScreenState extends State<TapToEditScreen> {
       if (!started) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(Provider.of<LanguageService>(context, listen: false).getText('voice_input_failed'))),
+            SnackBar(
+              content: Text(
+                Provider.of<LanguageService>(
+                  context,
+                  listen: false,
+                ).getText('voice_input_failed'),
+              ),
+            ),
           );
         }
       }
@@ -127,9 +185,9 @@ class _TapToEditScreenState extends State<TapToEditScreen> {
         });
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to pick image: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Failed to pick image: $e')));
     }
   }
 
@@ -138,26 +196,156 @@ class _TapToEditScreenState extends State<TapToEditScreen> {
     _completedTraces.clear();
     _currentTracePath = null;
     _isTracing = false;
+    _isSnapping = false;
+    _maskImageUrl = null;
+    _lastTapFocusPoint = null;
     _showEditPanel = false;
     _selectedElementType = null;
     _promptController.clear();
   }
 
-  void _handlePanStart(DragStartDetails details) {
+  /// Calculates zoom scale based on selection size to nicely frame the element
+  double _calculateAdaptiveScale({
+    required double boxWidth,
+    required double boxHeight,
+    required Size viewportSize,
+  }) {
+    if (boxWidth <= 40 || boxHeight <= 40) {
+      // Single tap or tiny selection -> 2.5x as requested by user
+      return 2.5;
+    }
+    // Make selection fill roughly 65% of viewport
+    final scaleX = (viewportSize.width * 0.65) / boxWidth;
+    final scaleY = (viewportSize.height * 0.65) / boxHeight;
+    final scale = math.min(scaleX, scaleY);
+    return scale.clamp(1.5, 4.0);
+  }
+
+  /// Smoothly animates the viewport to focus on the target point
+  void _animateZoomTo({
+    required Offset focusPoint,
+    required double targetScale,
+  }) {
+    final containerBox =
+        _containerKey.currentContext?.findRenderObject() as RenderBox?;
+    final viewportSize = containerBox?.size ?? MediaQuery.of(context).size;
+    final vw = viewportSize.width;
+    final vh = viewportSize.height;
+
+    // Center focusPoint in viewport when scaled
+    final tx = vw / 2 - focusPoint.dx * targetScale;
+    final ty = vh / 2 - focusPoint.dy * targetScale;
+
+    final targetMatrix = Matrix4.identity()
+      ..translate(tx, ty)
+      ..scale(targetScale);
+
+    _zoomAnimationController.stop();
+    _zoomAnimation =
+        Matrix4Tween(
+          begin: _transformationController.value,
+          end: targetMatrix,
+        ).animate(
+          CurvedAnimation(
+            parent: _zoomAnimationController,
+            curve: Curves.easeOutCubic,
+          ),
+        );
+
+    _zoomAnimationController.reset();
+    _zoomAnimationController.forward();
+  }
+
+  /// Reset view back to 1.0x scale
+  void _resetZoom() {
+    _zoomAnimationController.stop();
+    _zoomAnimation =
+        Matrix4Tween(
+          begin: _transformationController.value,
+          end: Matrix4.identity(),
+        ).animate(
+          CurvedAnimation(
+            parent: _zoomAnimationController,
+            curve: Curves.easeOutCubic,
+          ),
+        );
+    _zoomAnimationController.reset();
+    _zoomAnimationController.forward();
+  }
+
+  /// Calls Meta's SAM 2 to automatically snap to object edges
+  Future<void> _triggerEdgeSnapping({
+    required double tapX,
+    required double tapY,
+    List<List<double>>? traceImagePoints,
+  }) async {
     if (_currentImage == null) return;
 
-    final RenderBox? renderBox = context.findRenderObject() as RenderBox?;
-    if (renderBox == null) return;
-    
-    final Offset localOffset = renderBox.globalToLocal(details.globalPosition);
-    
-    // Haptic feedback for tracing start
+    setState(() {
+      _isSnapping = true;
+      _maskImageUrl = null;
+    });
+
+    try {
+      final imgW = _imageWidth > 0 ? _imageWidth : 512.0;
+      final imgH = _imageHeight > 0 ? _imageHeight : 512.0;
+
+      String maskUrl;
+      if (traceImagePoints != null && traceImagePoints.length >= 2) {
+        maskUrl = await _samService.generateMaskFromPoints(
+          imageUrl: _currentImage!.url,
+          imagePoints: traceImagePoints,
+          imageWidth: imgW,
+          imageHeight: imgH,
+        );
+      } else {
+        maskUrl = await _samService.generateMaskFromTap(
+          imageUrl: _currentImage!.url,
+          x: tapX,
+          y: tapY,
+          imageWidth: imgW,
+          imageHeight: imgH,
+        );
+      }
+
+      if (mounted) {
+        setState(() {
+          _maskImageUrl = maskUrl;
+          _isSnapping = false;
+          _showConfirmSelection = true;
+        });
+        HapticFeedback.mediumImpact();
+      }
+    } catch (e) {
+      debugPrint('SAM 2 edge snapping failed: $e');
+      if (mounted) {
+        setState(() {
+          _isSnapping = false;
+          _showConfirmSelection = true; // Still allow manual trace fallback
+        });
+      }
+    }
+  }
+
+  void _handlePanStart(DragStartDetails details) {
+    if (_currentImage == null || _isEditing) return;
+
+    final RenderBox? containerBox =
+        _containerKey.currentContext?.findRenderObject() as RenderBox?;
+    if (containerBox == null) return;
+
+    final Offset localOffset = containerBox.globalToLocal(
+      details.globalPosition,
+    );
+
     HapticFeedback.selectionClick();
-    
+
     setState(() {
       _tracePoints = [localOffset];
       _isTracing = true;
       _showEditPanel = false;
+      _showConfirmSelection = false;
+      _maskImageUrl = null;
       _currentTracePath = Path()..moveTo(localOffset.dx, localOffset.dy);
     });
   }
@@ -165,11 +353,13 @@ class _TapToEditScreenState extends State<TapToEditScreen> {
   void _handlePanUpdate(DragUpdateDetails details) {
     if (!_isTracing) return;
 
-    final RenderBox? renderBox = context.findRenderObject() as RenderBox?;
-    if (renderBox == null) return;
-    
-    final Offset localOffset = renderBox.globalToLocal(details.globalPosition);
-    // Only add point if far enough from last (smoother trace, less jitter)
+    final RenderBox? containerBox =
+        _containerKey.currentContext?.findRenderObject() as RenderBox?;
+    if (containerBox == null) return;
+
+    final Offset localOffset = containerBox.globalToLocal(
+      details.globalPosition,
+    );
     const double minPointDistance = 3.0;
     if (_tracePoints.isEmpty ||
         (localOffset - _tracePoints.last).distance > minPointDistance) {
@@ -185,42 +375,101 @@ class _TapToEditScreenState extends State<TapToEditScreen> {
 
     setState(() {
       _isTracing = false;
-      if (_tracePoints.length >= 12) { // Minimum trace length for a meaningful selection
+      if (_tracePoints.length >= 8) {
         final smoothed = _smoothTrace(_tracePoints);
-        _completedTraces.add(smoothed);
-        _showConfirmSelection = true;
+        _completedTraces = [smoothed];
+        _currentTracePath = null;
+
+        // Calculate bounding box and center
+        final minX = smoothed.map((p) => p.dx).reduce(math.min);
+        final maxX = smoothed.map((p) => p.dx).reduce(math.max);
+        final minY = smoothed.map((p) => p.dy).reduce(math.min);
+        final maxY = smoothed.map((p) => p.dy).reduce(math.max);
+        final boxW = maxX - minX;
+        final boxH = maxY - minY;
+        final centerX = (minX + maxX) / 2;
+        final centerY = (minY + maxY) / 2;
+
+        final containerBox =
+            _containerKey.currentContext?.findRenderObject() as RenderBox?;
+        final vpSize = containerBox?.size ?? MediaQuery.of(context).size;
+        final scale = _calculateAdaptiveScale(
+          boxWidth: boxW,
+          boxHeight: boxH,
+          viewportSize: vpSize,
+        );
+
+        _lastTapFocusPoint = Offset(centerX, centerY);
+        _animateZoomTo(
+          focusPoint: Offset(centerX, centerY),
+          targetScale: scale,
+        );
+
+        // Convert points to image space for SAM 2
+        final imgW = _imageWidth > 0 ? _imageWidth : 512.0;
+        final imgH = _imageHeight > 0 ? _imageHeight : 512.0;
+        final imagePoints = smoothed.map((p) {
+          final ix = (p.dx - _imageOffset.dx).clamp(0.0, imgW);
+          final iy = (p.dy - _imageOffset.dy).clamp(0.0, imgH);
+          return [ix, iy];
+        }).toList();
+
+        final centerTapX = (centerX - _imageOffset.dx).clamp(0.0, imgW);
+        final centerTapY = (centerY - _imageOffset.dy).clamp(0.0, imgH);
+
+        _triggerEdgeSnapping(
+          tapX: centerTapX,
+          tapY: centerTapY,
+          traceImagePoints: imagePoints,
+        );
       } else {
         _resetSelection();
       }
-      _currentTracePath = null;
     });
   }
 
   void _handleTap(TapDownDetails details) {
-    if (_currentImage == null) return;
+    if (_currentImage == null || _isEditing) return;
 
-    final RenderBox? renderBox = context.findRenderObject() as RenderBox?;
-    if (renderBox == null) return;
-    
-    final Offset localOffset = renderBox.globalToLocal(details.globalPosition);
-    
-    // For single tap, create a small circle trace (smooth octagon for better identification)
+    final RenderBox? containerBox =
+        _containerKey.currentContext?.findRenderObject() as RenderBox?;
+    if (containerBox == null) return;
+
+    final Offset localOffset = containerBox.globalToLocal(
+      details.globalPosition,
+    );
+
+    HapticFeedback.selectionClick();
+
     const double r = 28.0;
+    final tapPoints = [
+      localOffset + const Offset(r, 0),
+      localOffset + Offset(r * 0.7, r * 0.7),
+      localOffset + const Offset(0, r),
+      localOffset + Offset(-r * 0.7, r * 0.7),
+      localOffset + const Offset(-r, 0),
+      localOffset + Offset(-r * 0.7, -r * 0.7),
+      localOffset + const Offset(0, -r),
+      localOffset + Offset(r * 0.7, -r * 0.7),
+      localOffset + const Offset(r, 0),
+    ];
+
     setState(() {
-      _tracePoints = [
-        localOffset + const Offset(r, 0),
-        localOffset + Offset(r * 0.7, r * 0.7),
-        localOffset + const Offset(0, r),
-        localOffset + Offset(-r * 0.7, r * 0.7),
-        localOffset + const Offset(-r, 0),
-        localOffset + Offset(-r * 0.7, -r * 0.7),
-        localOffset + const Offset(0, -r),
-        localOffset + Offset(r * 0.7, -r * 0.7),
-        localOffset + const Offset(r, 0),
-      ];
-      _completedTraces.add(_tracePoints.toList());
-      _showConfirmSelection = true;
+      _tracePoints = tapPoints;
+      _completedTraces = [tapPoints];
+      _lastTapFocusPoint = localOffset;
     });
+
+    // Animate zoom to tap point at 2.5x
+    _animateZoomTo(focusPoint: localOffset, targetScale: 2.5);
+
+    // Calculate image space coordinates for SAM 2
+    final imgW = _imageWidth > 0 ? _imageWidth : 512.0;
+    final imgH = _imageHeight > 0 ? _imageHeight : 512.0;
+    final tapX = (localOffset.dx - _imageOffset.dx).clamp(0.0, imgW);
+    final tapY = (localOffset.dy - _imageOffset.dy).clamp(0.0, imgH);
+
+    _triggerEdgeSnapping(tapX: tapX, tapY: tapY);
   }
 
   /// Smooth trace with a simple 3-point moving average for cleaner identification.
@@ -231,10 +480,12 @@ class _TapToEditScreenState extends State<TapToEditScreen> {
       final prev = points[math.max(0, i - 1)];
       final curr = points[i];
       final next = points[math.min(points.length - 1, i + 1)];
-      smoothed.add(Offset(
-        (prev.dx + curr.dx + next.dx) / 3,
-        (prev.dy + curr.dy + next.dy) / 3,
-      ));
+      smoothed.add(
+        Offset(
+          (prev.dx + curr.dx + next.dx) / 3,
+          (prev.dy + curr.dy + next.dy) / 3,
+        ),
+      );
     }
     return smoothed;
   }
@@ -254,9 +505,18 @@ class _TapToEditScreenState extends State<TapToEditScreen> {
   }
 
   Future<void> _applyEdit() async {
-    if (_currentImage == null || _completedTraces.isEmpty || _selectedElementType == null) {
+    if (_currentImage == null ||
+        _completedTraces.isEmpty ||
+        _selectedElementType == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(Provider.of<LanguageService>(context, listen: false).getText('please_trace_and_select'))),
+        SnackBar(
+          content: Text(
+            Provider.of<LanguageService>(
+              context,
+              listen: false,
+            ).getText('please_trace_and_select'),
+          ),
+        ),
       );
       return;
     }
@@ -264,18 +524,13 @@ class _TapToEditScreenState extends State<TapToEditScreen> {
     final editDescription = _promptController.text.trim();
     if (editDescription.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(Provider.of<LanguageService>(context, listen: false).getText('please_describe_changes'))),
-      );
-      return;
-    }
-
-    if (_isLocalFilePath(_currentImage!.url)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Text(
-            'AI edit works with images from the design flow. For gallery images, generate or open a design first, then use Tap-to-Edit.',
+            Provider.of<LanguageService>(
+              context,
+              listen: false,
+            ).getText('please_describe_changes'),
           ),
-          duration: Duration(seconds: 4),
         ),
       );
       return;
@@ -286,6 +541,9 @@ class _TapToEditScreenState extends State<TapToEditScreen> {
     });
 
     try {
+      final imgW = _imageWidth > 0 ? _imageWidth : 512.0;
+      final imgH = _imageHeight > 0 ? _imageHeight : 512.0;
+
       // Bounding box of traced area (in container space)
       final allPoints = _completedTraces.expand((trace) => trace).toList();
       final minX = allPoints.map((p) => p.dx).reduce(math.min);
@@ -294,9 +552,20 @@ class _TapToEditScreenState extends State<TapToEditScreen> {
       final maxY = allPoints.map((p) => p.dy).reduce(math.max);
       final centerX = (minX + maxX) / 2;
       final centerY = (minY + maxY) / 2;
-      // Convert center to image space for SAM (0..imageWidth, 0..imageHeight)
-      final tapX = (centerX - _imageOffset.dx).clamp(0.0, _imageWidth);
-      final tapY = (centerY - _imageOffset.dy).clamp(0.0, _imageHeight);
+
+      // Convert center to image space for SAM
+      final tapX = (centerX - _imageOffset.dx).clamp(0.0, imgW);
+      final tapY = (centerY - _imageOffset.dy).clamp(0.0, imgH);
+
+      // Convert trace points to image space for SAM
+      List<List<double>>? tracePointsForSAM;
+      if (_completedTraces.isNotEmpty && _completedTraces.first.length >= 2) {
+        tracePointsForSAM = _completedTraces.first.map((p) {
+          final ix = (p.dx - _imageOffset.dx).clamp(0.0, imgW);
+          final iy = (p.dy - _imageOffset.dy).clamp(0.0, imgH);
+          return [ix, iy];
+        }).toList();
+      }
 
       final editPrompt = _tapToEditService.generateElementEditPrompt(
         _selectedElementType!,
@@ -308,10 +577,12 @@ class _TapToEditScreenState extends State<TapToEditScreen> {
         originalImage: _currentImage!,
         tapX: tapX,
         tapY: tapY,
-        imageWidth: _imageWidth,
-        imageHeight: _imageHeight,
+        imageWidth: imgW,
+        imageHeight: imgH,
         editPrompt: editPrompt,
         elementType: _selectedElementType!,
+        precomputedMaskUrl: _maskImageUrl,
+        traceImagePoints: tracePointsForSAM,
       );
 
       setState(() {
@@ -328,7 +599,10 @@ class _TapToEditScreenState extends State<TapToEditScreen> {
       });
       final msg = _sanitizeErrorMessage(e);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Edit failed: $msg'), duration: const Duration(seconds: 5)),
+        SnackBar(
+          content: Text('Edit failed: $msg'),
+          duration: const Duration(seconds: 5),
+        ),
       );
     }
   }
@@ -336,7 +610,9 @@ class _TapToEditScreenState extends State<TapToEditScreen> {
   /// Never show raw HTML or huge error dumps to the user.
   String _sanitizeErrorMessage(Object e) {
     final s = e.toString();
-    if (s.contains('<html') || s.contains('<!doctype') || s.contains('<title')) {
+    if (s.contains('<html') ||
+        s.contains('<!doctype') ||
+        s.contains('<title')) {
       return 'Server returned an error. Check API keys and try again.';
     }
     if (s.length > 200) return '${s.substring(0, 197)}...';
@@ -395,23 +671,22 @@ class _TapToEditScreenState extends State<TapToEditScreen> {
             ),
 
             // Image Source Options
-            if (_showImageSourceOptions)
-              _buildImageSourceOptions(context),
+            if (_showImageSourceOptions) _buildImageSourceOptions(context),
 
             // Confirm Selection Overlay (positioned above navbar so it's visible and tappable)
-            if (_showConfirmSelection)
-              _buildConfirmSelectionOverlay(context),
+            if (_showConfirmSelection) _buildConfirmSelectionOverlay(context),
 
             // Edit Panel
-            if (_showEditPanel)
-              _buildEditPanel(context),
+            if (_showEditPanel) _buildEditPanel(context),
 
             // Loading Overlay
-            if (_isEditing)
-              _buildLoadingOverlay(),
+            if (_isEditing) _buildLoadingOverlay(),
 
             // Instructions
-            if (_currentImage != null && _completedTraces.isEmpty && _currentTracePath == null && !_showEditPanel)
+            if (_currentImage != null &&
+                _completedTraces.isEmpty &&
+                _currentTracePath == null &&
+                !_showEditPanel)
               _buildInstructions(),
           ],
         ),
@@ -486,53 +761,242 @@ class _TapToEditScreenState extends State<TapToEditScreen> {
 
   Widget _buildImageViewer(BuildContext context) {
     final lang = context.watch<LanguageService>();
-    return GestureDetector(
-      onPanStart: _handlePanStart,
-      onPanUpdate: _handlePanUpdate,
-      onPanEnd: _handlePanEnd,
-      onTapDown: _handleTap,
-      child: Container(
-        key: _containerKey,
-        color: Colors.black,
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
-            // Image (contain so coordinates match displayed rect)
-            if (_currentImage != null)
-              Center(
-                child: FittedBox(
-                  key: _imageKey,
-                  fit: BoxFit.contain,
-                  child: _buildImageWidget(),
-                ),
-              )
-            else
-              Container(
-                color: Colors.black,
-                child: Center(
-                  child: Text(
-                    lang.getText('no_image_selected'),
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: AppConstants.fontSizeLarge,
+    return Container(
+      key: _containerKey,
+      color: Colors.black,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          // Pinchable, zoomable InteractiveViewer
+          InteractiveViewer(
+            transformationController: _transformationController,
+            minScale: 1.0,
+            maxScale: 5.0,
+            panEnabled: true,
+            scaleEnabled: true,
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onPanStart: _handlePanStart,
+              onPanUpdate: _handlePanUpdate,
+              onPanEnd: _handlePanEnd,
+              onTapDown: _handleTap,
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  // Base image
+                  if (_currentImage != null)
+                    Center(
+                      child: FittedBox(
+                        key: _imageKey,
+                        fit: BoxFit.contain,
+                        child: _buildImageWidget(),
+                      ),
+                    )
+                  else
+                    Container(
+                      color: Colors.black,
+                      child: Center(
+                        child: Text(
+                          lang.getText('no_image_selected'),
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: AppConstants.fontSizeLarge,
+                          ),
+                        ),
+                      ),
+                    ),
+
+                  // SAM 2 Edge-Snapped Mask Overlay (golden amber glowing highlight)
+                  if (_maskImageUrl != null &&
+                      _imageWidth > 0 &&
+                      _imageHeight > 0)
+                    Center(
+                      child: SizedBox(
+                        width: _imageWidth,
+                        height: _imageHeight,
+                        child: ColorFiltered(
+                          colorFilter: const ColorFilter.matrix(<double>[
+                            1.0,
+                            0,
+                            0,
+                            0,
+                            0,
+                            0.42,
+                            0,
+                            0,
+                            0,
+                            0,
+                            0.21,
+                            0,
+                            0,
+                            0,
+                            0,
+                            0.55,
+                            0,
+                            0,
+                            0,
+                            0,
+                          ]),
+                          child: Image.network(
+                            _maskImageUrl!,
+                            fit: BoxFit.contain,
+                            errorBuilder: (context, error, stackTrace) =>
+                                const SizedBox(),
+                          ),
+                        ),
+                      ),
+                    ),
+
+                  // Freehand Tracing / Circular Tap Overlay
+                  if (_completedTraces.isNotEmpty || _currentTracePath != null)
+                    CustomPaint(
+                      painter: TracingPainter(
+                        completedTraces: _completedTraces,
+                        currentTrace: _currentTracePath,
+                        isTracing: _isTracing,
+                      ),
+                      child: Container(),
+                    ),
+
+                  // Pulsing ripple ring while SAM 2 snaps to edges
+                  if (_isSnapping && _lastTapFocusPoint != null)
+                    Positioned(
+                      left: _lastTapFocusPoint!.dx - 36,
+                      top: _lastTapFocusPoint!.dy - 36,
+                      child: AnimatedBuilder(
+                        animation: _pulseAnimation,
+                        builder: (context, child) {
+                          return Transform.scale(
+                            scale: _pulseAnimation.value,
+                            child: Container(
+                              width: 72,
+                              height: 72,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: AppColors.accentOrange,
+                                  width: 3,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: AppColors.accentOrange.withOpacity(
+                                      0.5,
+                                    ),
+                                    blurRadius: 16,
+                                    spreadRadius: 4,
+                                  ),
+                                ],
+                              ),
+                              child: const Center(
+                                child: SizedBox(
+                                  width: 24,
+                                  height: 24,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2.5,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+
+          // Floating Reset Zoom Button when zoomed in
+          if (_currentScale > 1.1)
+            Positioned(
+              top: 70,
+              right: 16,
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: _resetZoom,
+                  borderRadius: BorderRadius.circular(20),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withOpacity(0.75),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: Colors.white24),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(
+                          Icons.zoom_out_map,
+                          color: Colors.white,
+                          size: 16,
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          '${_currentScale.toStringAsFixed(1)}x  Reset',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
               ),
+            ),
 
-            // Freehand Tracing Overlay
-            if (_completedTraces.isNotEmpty || _currentTracePath != null)
-              CustomPaint(
-                painter: TracingPainter(
-                  completedTraces: _completedTraces,
-                  currentTrace: _currentTracePath,
-                  isTracing: _isTracing,
+          // Snapping in progress indicator pill
+          if (_isSnapping)
+            Positioned(
+              bottom: 120,
+              left: 0,
+              right: 0,
+              child: Center(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withOpacity(0.85),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: AppColors.accentOrange.withOpacity(0.6),
+                    ),
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      SizedBox(
+                        width: 14,
+                        height: 14,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: AppColors.accentOrange,
+                        ),
+                      ),
+                      SizedBox(width: 10),
+                      Text(
+                        'AI snapping to element edges...',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-                child: Container(),
               ),
-          ],
-        ),
+            ),
+        ],
       ),
     );
   }
@@ -562,8 +1026,45 @@ class _TapToEditScreenState extends State<TapToEditScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
+              if (_maskImageUrl != null) ...[
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.accentOrange.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: AppColors.accentOrange.withOpacity(0.4),
+                    ),
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.auto_awesome,
+                        size: 14,
+                        color: AppColors.accentOrange,
+                      ),
+                      SizedBox(width: 6),
+                      Text(
+                        'AI Snapped to Element Edges',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.accentOrange,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 8),
+              ],
               Text(
-                lang.getText('tracing_confirmed'),
+                _maskImageUrl != null
+                    ? 'Element Edges Detected'
+                    : lang.getText('tracing_confirmed'),
                 style: TextStyle(
                   fontSize: AppConstants.fontSizeMedium,
                   fontWeight: FontWeight.w600,
@@ -572,7 +1073,9 @@ class _TapToEditScreenState extends State<TapToEditScreen> {
               ),
               const SizedBox(height: 8),
               Text(
-                lang.getText('element_traced_ready'),
+                _maskImageUrl != null
+                    ? 'Highlighted area will be edited. Pinch to adjust view or proceed.'
+                    : lang.getText('element_traced_ready'),
                 style: TextStyle(
                   fontSize: AppConstants.fontSizeSmall,
                   color: AppColors.textLight,
@@ -708,7 +1211,7 @@ class _TapToEditScreenState extends State<TapToEditScreen> {
   Widget _buildEditPanel(BuildContext context) {
     final lang = context.watch<LanguageService>();
     EditableElement.fromType(_selectedElementType ?? ElementType.face);
-    
+
     return Positioned(
       bottom: 0,
       left: 0,
@@ -733,7 +1236,9 @@ class _TapToEditScreenState extends State<TapToEditScreen> {
           ],
         ),
         child: SingleChildScrollView(
-          padding: const EdgeInsets.only(bottom: 100), // Added bottom padding to prevent navbar overlap
+          padding: const EdgeInsets.only(
+            bottom: 100,
+          ), // Added bottom padding to prevent navbar overlap
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -776,7 +1281,9 @@ class _TapToEditScreenState extends State<TapToEditScreen> {
                             ],
                           ),
                           selected: _selectedElementType == elementType,
-                          selectedColor: AppColors.accentOrange.withOpacity(0.3),
+                          selectedColor: AppColors.accentOrange.withOpacity(
+                            0.3,
+                          ),
                           onSelected: (selected) {
                             if (selected) {
                               setState(() {
@@ -796,7 +1303,9 @@ class _TapToEditScreenState extends State<TapToEditScreen> {
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     color: AppColors.accentOrange.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(AppConstants.borderRadius),
+                    borderRadius: BorderRadius.circular(
+                      AppConstants.borderRadius,
+                    ),
                     border: Border.all(
                       color: AppColors.accentOrange.withOpacity(0.3),
                     ),
@@ -841,7 +1350,9 @@ class _TapToEditScreenState extends State<TapToEditScreen> {
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     color: AppColors.accentOrange.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(AppConstants.borderRadius),
+                    borderRadius: BorderRadius.circular(
+                      AppConstants.borderRadius,
+                    ),
                     border: Border.all(
                       color: AppColors.accentOrange.withOpacity(0.3),
                     ),
@@ -856,7 +1367,9 @@ class _TapToEditScreenState extends State<TapToEditScreen> {
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(
-                          _tapToEditService.getElementGuidance(_selectedElementType!),
+                          _tapToEditService.getElementGuidance(
+                            _selectedElementType!,
+                          ),
                           style: TextStyle(
                             fontSize: AppConstants.fontSizeSmall,
                             color: AppColors.textDark,
@@ -873,8 +1386,12 @@ class _TapToEditScreenState extends State<TapToEditScreen> {
               Container(
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(AppConstants.borderRadius),
-                  border: Border.all(color: AppColors.primaryBrown.withOpacity(0.2)),
+                  borderRadius: BorderRadius.circular(
+                    AppConstants.borderRadius,
+                  ),
+                  border: Border.all(
+                    color: AppColors.primaryBrown.withOpacity(0.2),
+                  ),
                 ),
                 child: Row(
                   children: [
@@ -910,7 +1427,9 @@ class _TapToEditScreenState extends State<TapToEditScreen> {
 
               // Example Prompts
               if (_selectedElementType != null &&
-                  _tapToEditService.getExamplePrompts(_selectedElementType!).isNotEmpty)
+                  _tapToEditService
+                      .getExamplePrompts(_selectedElementType!)
+                      .isNotEmpty)
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -929,34 +1448,37 @@ class _TapToEditScreenState extends State<TapToEditScreen> {
                       children: _tapToEditService
                           .getExamplePrompts(_selectedElementType!)
                           .map((prompt) {
-                        return InkWell(
-                          onTap: () {
-                            setState(() {
-                              _promptController.text = prompt;
-                            });
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 6,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(16),
-                              border: Border.all(
-                                color: AppColors.primaryBrown.withOpacity(0.3),
+                            return InkWell(
+                              onTap: () {
+                                setState(() {
+                                  _promptController.text = prompt;
+                                });
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 6,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(16),
+                                  border: Border.all(
+                                    color: AppColors.primaryBrown.withOpacity(
+                                      0.3,
+                                    ),
+                                  ),
+                                ),
+                                child: Text(
+                                  prompt,
+                                  style: TextStyle(
+                                    fontSize: AppConstants.fontSizeSmall,
+                                    color: AppColors.textDark,
+                                  ),
+                                ),
                               ),
-                            ),
-                            child: Text(
-                              prompt,
-                              style: TextStyle(
-                                fontSize: AppConstants.fontSizeSmall,
-                                color: AppColors.textDark,
-                              ),
-                            ),
-                          ),
-                        );
-                      }).toList(),
+                            );
+                          })
+                          .toList(),
                     ),
                     const SizedBox(height: 12),
                   ],
@@ -987,14 +1509,17 @@ class _TapToEditScreenState extends State<TapToEditScreen> {
               ),
 
               // Success Indicator
-              if (_currentImage != null && _currentImage!.id != widget.image?.id)
+              if (_currentImage != null &&
+                  _currentImage!.id != widget.image?.id)
                 Padding(
                   padding: const EdgeInsets.only(top: 16),
                   child: Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
                       color: AppColors.accentOrange.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(AppConstants.borderRadius),
+                      borderRadius: BorderRadius.circular(
+                        AppConstants.borderRadius,
+                      ),
                       border: Border.all(
                         color: AppColors.accentOrange.withOpacity(0.3),
                       ),
@@ -1027,7 +1552,9 @@ class _TapToEditScreenState extends State<TapToEditScreen> {
               _buildAccessibilityInfo(),
               const SizedBox(height: 60),
               _buildAdditionalContent(),
-              const SizedBox(height: 80), // Extra padding to ensure buttons are accessible
+              const SizedBox(
+                height: 80,
+              ), // Extra padding to ensure buttons are accessible
             ],
           ),
         ),
@@ -1041,9 +1568,7 @@ class _TapToEditScreenState extends State<TapToEditScreen> {
       decoration: BoxDecoration(
         color: AppColors.accentOrange.withOpacity(0.1),
         borderRadius: BorderRadius.circular(AppConstants.borderRadius),
-        border: Border.all(
-          color: AppColors.accentOrange.withOpacity(0.3),
-        ),
+        border: Border.all(color: AppColors.accentOrange.withOpacity(0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1088,7 +1613,11 @@ class _TapToEditScreenState extends State<TapToEditScreen> {
           const SizedBox(height: 8),
           Row(
             children: [
-              Icon(Icons.arrow_downward, size: 16, color: AppColors.accentOrange),
+              Icon(
+                Icons.arrow_downward,
+                size: 16,
+                color: AppColors.accentOrange,
+              ),
               const SizedBox(width: 8),
               Text(
                 'The edit panel is designed to be scrollable for better accessibility',
@@ -1110,9 +1639,7 @@ class _TapToEditScreenState extends State<TapToEditScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(AppConstants.borderRadius),
-        border: Border.all(
-          color: AppColors.primaryBrown.withOpacity(0.2),
-        ),
+        border: Border.all(color: AppColors.primaryBrown.withOpacity(0.2)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1312,7 +1839,7 @@ class TracingPainter extends CustomPainter {
     // Draw completed traces
     for (final trace in completedTraces) {
       if (trace.length < 2) continue;
-      
+
       final path = Path();
       path.moveTo(trace.first.dx, trace.first.dy);
       for (int i = 1; i < trace.length; i++) {
@@ -1374,7 +1901,7 @@ class TracingPainter extends CustomPainter {
       if (metrics.isNotEmpty) {
         final lastMetric = metrics.last;
         final pos = lastMetric.getTangentForOffset(lastMetric.length)?.position;
-        
+
         if (pos != null) {
           final centerPaint = Paint()
             ..color = AppColors.accentOrange
@@ -1394,27 +1921,27 @@ class TracingPainter extends CustomPainter {
   Path _createDashedPath(Path path, double dashLength, double dashSpace) {
     final metrics = path.computeMetrics();
     final newPath = Path();
-    
+
     for (final metric in metrics) {
       double distance = 0;
       bool draw = true;
-      
+
       while (distance < metric.length) {
         if (draw) {
           final startTangent = metric.getTangentForOffset(distance);
           final endTangent = metric.getTangentForOffset(distance + dashLength);
-          
+
           if (startTangent != null && endTangent != null) {
             newPath.moveTo(startTangent.position.dx, startTangent.position.dy);
             newPath.lineTo(endTangent.position.dx, endTangent.position.dy);
           }
         }
-        
+
         distance += dashLength + dashSpace;
         draw = !draw;
       }
     }
-    
+
     return newPath;
   }
 
@@ -1511,7 +2038,12 @@ class CircleSelectionPainter extends CustomPainter {
     }
   }
 
-  void _drawDashedCircle(Canvas canvas, Offset center, double radius, Paint paint) {
+  void _drawDashedCircle(
+    Canvas canvas,
+    Offset center,
+    double radius,
+    Paint paint,
+  ) {
     const dashLength = 10.0;
     const dashSpace = 5.0;
     const totalDashes = 360 / (dashLength + dashSpace);

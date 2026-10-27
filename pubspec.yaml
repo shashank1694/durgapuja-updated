@@ -60,6 +60,8 @@ dependencies:
   # Tap-to-Edit dependencies
   http: ^1.2.0
 
+  path: any
+  http_parser: any
 dev_dependencies:
   flutter_test:
     sdk: flutter

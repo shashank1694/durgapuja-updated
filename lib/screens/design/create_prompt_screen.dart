@@ -29,17 +29,17 @@ class _CreatePromptScreenState extends State<CreatePromptScreen> {
           {
             'title': 'PROMPT FOR IMAGE GENERATION',
             'content':
-                'A hyper-realistic digital painting of a Durga idol\'s sari in the traditional Bengal style, featuring intricate Jamdani motifs in red and gold on a white silk base. Focus on the fabric\'s texture and the precise geometric patterns of the weave, ensuring iconographic accuracy for the goddess\'s attire.'
+                'A hyper-realistic digital painting of a Durga idol\'s sari in the traditional Bengal style, featuring intricate Jamdani motifs in red and gold on a white silk base. Focus on the fabric\'s texture and the precise geometric patterns of the weave, ensuring iconographic accuracy for the goddess\'s attire.',
           },
           {
             'title': 'PROMPT FOR DESIGN CONCEPT',
             'content':
-                'Detailed ornamentation design for a Durga idol\'s mukut (crown) in the Bengal Dokra style. The prompt should specify traditional motifs like peacock, lotus flowers, and solar symbols. Emphasize a rustic, non-polished brass finish and asymmetrical handcrafted details.'
+                'Detailed ornamentation design for a Durga idol\'s mukut (crown) in the Bengal Dokra style. The prompt should specify traditional motifs like peacock, lotus flowers, and solar symbols. Emphasize a rustic, non-polished brass finish and asymmetrical handcrafted details.',
           },
           {
             'title': 'PROMPT FOR COLOR PALETTE',
             'content':
-                'Generate a traditional Bengali color palette for a Chalchitra backdrop. Primary colors: vermillion red, ochre yellow, and deep indigo. Secondary colors: leaf green and pristine white for accents. The style should be reminiscent of Patachitra scroll painting.'
+                'Generate a traditional Bengali color palette for a Chalchitra backdrop. Primary colors: vermillion red, ochre yellow, and deep indigo. Secondary colors: leaf green and pristine white for accents. The style should be reminiscent of Patachitra scroll painting.',
           },
         ]);
         _isLoading = false;
@@ -58,9 +58,7 @@ class _CreatePromptScreenState extends State<CreatePromptScreen> {
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(lang.getText('create_prompt')),
-        actions: const [
-          LanguageToggleAction(),
-        ],
+        actions: const [LanguageToggleAction()],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
@@ -81,8 +79,7 @@ class _CreatePromptScreenState extends State<CreatePromptScreen> {
               controller: _promptController,
               hasVoiceInput: true,
               maxLines: 3,
-              onVoicePressed: () {
-              },
+              onVoicePressed: () {},
             ),
             const SizedBox(height: 32),
             if (_generatedPrompts.isNotEmpty) ...[
@@ -95,7 +92,9 @@ class _CreatePromptScreenState extends State<CreatePromptScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-              ..._generatedPrompts.map((prompt) => _buildPromptCard(context, prompt)),
+              ..._generatedPrompts.map(
+                (prompt) => _buildPromptCard(context, prompt),
+              ),
             ],
             const SizedBox(height: 24),
             if (_isLoading)
@@ -118,11 +117,7 @@ class _CreatePromptScreenState extends State<CreatePromptScreen> {
           ],
         ),
       ),
-      bottomNavigationBar: CustomBottomNav(
-        currentIndex: 1,
-        onTap: (index) {
-        },
-      ),
+      bottomNavigationBar: CustomBottomNav(currentIndex: 1, onTap: (index) {}),
     );
   }
 
@@ -172,9 +167,7 @@ class _CreatePromptScreenState extends State<CreatePromptScreen> {
                 onPressed: () {},
                 icon: const Icon(Icons.copy, size: 16),
                 label: Text(lang.getText('copy')),
-                style: TextButton.styleFrom(
-                  foregroundColor: Colors.white70,
-                ),
+                style: TextButton.styleFrom(foregroundColor: Colors.white70),
               ),
             ],
           ),

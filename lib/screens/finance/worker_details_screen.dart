@@ -20,14 +20,15 @@ class WorkerDetailsScreen extends StatefulWidget {
   });
 
   // Constructor for navigation with arguments
-  WorkerDetailsScreen.fromArgs(Map<String, dynamic> args)
-      : this(
-          workerName: args['name'] ?? 'Unknown',
-          category: args['category'] ?? 'Unknown',
-          budget: args['budget'] ?? '0',
-          paid: args['paid'] ?? '0',
-          isNewWorker: args['isNewWorker'] == true,
-        );
+  WorkerDetailsScreen.fromArgs(Map<String, dynamic> args, {Key? key})
+    : this(
+        key: key,
+        workerName: args['name'] ?? 'Unknown',
+        category: args['category'] ?? 'Unknown',
+        budget: args['budget'] ?? '0',
+        paid: args['paid'] ?? '0',
+        isNewWorker: args['isNewWorker'] == true,
+      );
 
   @override
   State<WorkerDetailsScreen> createState() => _WorkerDetailsScreenState();
@@ -60,14 +61,15 @@ class _WorkerDetailsScreenState extends State<WorkerDetailsScreen> {
       double.tryParse(_budgetController.text.replaceAll(',', '')) ?? 0.0;
   double get _parsedPaid =>
       double.tryParse(_paidController.text.replaceAll(',', '')) ?? 0.0;
-  double get _pending => (_parsedBudget - _parsedPaid).clamp(0.0, double.infinity);
+  double get _pending =>
+      (_parsedBudget - _parsedPaid).clamp(0.0, double.infinity);
 
   Future<void> _confirmDetails() async {
     final workerName = _workerNameController.text.trim();
     if (workerName.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter worker name')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Please enter worker name')));
       return;
     }
 
@@ -94,7 +96,9 @@ class _WorkerDetailsScreenState extends State<WorkerDetailsScreen> {
     final idolType = parts.isNotEmpty ? parts[0] : 'Unknown';
     final workerType = parts.length > 1 ? parts[1] : 'Unknown';
 
-    final amountTotal = widget.isNewWorker ? _parsedBudget : (double.tryParse(widget.budget.replaceAll(',', '')) ?? 0.0);
+    final amountTotal = widget.isNewWorker
+        ? _parsedBudget
+        : (double.tryParse(widget.budget.replaceAll(',', '')) ?? 0.0);
 
     // Insert worker fund with transaction log
     await DatabaseService.insertWorkerFundManual(
@@ -115,7 +119,10 @@ class _WorkerDetailsScreenState extends State<WorkerDetailsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final pending = widget.isNewWorker ? _pending : (double.tryParse(widget.budget.replaceAll(',', '')) ?? 0) - (double.tryParse(widget.paid.replaceAll(',', '')) ?? 0);
+    final pending = widget.isNewWorker
+        ? _pending
+        : (double.tryParse(widget.budget.replaceAll(',', '')) ?? 0) -
+              (double.tryParse(widget.paid.replaceAll(',', '')) ?? 0);
 
     return PopScope(
       canPop: false,
@@ -125,17 +132,19 @@ class _WorkerDetailsScreenState extends State<WorkerDetailsScreen> {
       child: Scaffold(
         backgroundColor: const Color(0xFFF5E6D3),
         appBar: AppBar(
-          title: Text(widget.isNewWorker
-              ? (_workerNameController.text.isEmpty ? 'New Worker' : _workerNameController.text)
-              : widget.workerName),
+          title: Text(
+            widget.isNewWorker
+                ? (_workerNameController.text.isEmpty
+                      ? 'New Worker'
+                      : _workerNameController.text)
+                : widget.workerName,
+          ),
           backgroundColor: const Color(0xFF9A5222),
           leading: IconButton(
             icon: const Icon(Icons.arrow_back),
             onPressed: () => context.go('/finance/dashboard'),
           ),
-          actions: const [
-            LanguageToggleAction(),
-          ],
+          actions: const [LanguageToggleAction()],
         ),
         floatingActionButton: FloatingActionButton(
           onPressed: () {},
@@ -164,7 +173,10 @@ class _WorkerDetailsScreenState extends State<WorkerDetailsScreen> {
                         borderRadius: BorderRadius.circular(16),
                         borderSide: BorderSide.none,
                       ),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 14,
+                      ),
                     ),
                   ),
 
@@ -191,16 +203,25 @@ class _WorkerDetailsScreenState extends State<WorkerDetailsScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text("Budget", style: TextStyle(color: Colors.white)),
+                              const Text(
+                                "Budget",
+                                style: TextStyle(color: Colors.white),
+                              ),
                               const SizedBox(height: 6),
                               widget.isNewWorker
                                   ? TextFormField(
                                       controller: _budgetController,
                                       keyboardType: TextInputType.number,
-                                      style: const TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.w600),
+                                      style: const TextStyle(
+                                        fontSize: 18,
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w600,
+                                      ),
                                       decoration: InputDecoration(
                                         hintText: '0',
-                                        hintStyle: TextStyle(color: Colors.white.withOpacity(0.8)),
+                                        hintStyle: TextStyle(
+                                          color: Colors.white.withOpacity(0.8),
+                                        ),
                                         border: InputBorder.none,
                                         isDense: true,
                                         contentPadding: EdgeInsets.zero,
@@ -208,7 +229,14 @@ class _WorkerDetailsScreenState extends State<WorkerDetailsScreen> {
                                       cursorColor: Colors.white,
                                       onChanged: (_) => setState(() {}),
                                     )
-                                  : Text("₹ ${widget.budget}", style: const TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.w600)),
+                                  : Text(
+                                      "₹ ${widget.budget}",
+                                      style: const TextStyle(
+                                        fontSize: 18,
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
                             ],
                           ),
                         ),
@@ -225,13 +253,19 @@ class _WorkerDetailsScreenState extends State<WorkerDetailsScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text("Paid", style: TextStyle(color: Colors.black)),
+                              const Text(
+                                "Paid",
+                                style: TextStyle(color: Colors.black),
+                              ),
                               const SizedBox(height: 6),
                               widget.isNewWorker
                                   ? TextFormField(
                                       controller: _paidController,
                                       keyboardType: TextInputType.number,
-                                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+                                      style: const TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.w600,
+                                      ),
                                       decoration: const InputDecoration(
                                         hintText: '0',
                                         border: InputBorder.none,
@@ -240,7 +274,13 @@ class _WorkerDetailsScreenState extends State<WorkerDetailsScreen> {
                                       ),
                                       onChanged: (_) => setState(() {}),
                                     )
-                                  : Text("₹ ${widget.paid}", style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600)),
+                                  : Text(
+                                      "₹ ${widget.paid}",
+                                      style: const TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
                             ],
                           ),
                         ),
@@ -265,7 +305,10 @@ class _WorkerDetailsScreenState extends State<WorkerDetailsScreen> {
                         const SizedBox(height: 6),
                         Text(
                           "₹ ${pending.toStringAsFixed(0)}",
-                          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
+                          style: const TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ],
                     ),
@@ -277,7 +320,10 @@ class _WorkerDetailsScreenState extends State<WorkerDetailsScreen> {
                   const Text("Amount paid", style: TextStyle(fontSize: 16)),
                   const SizedBox(height: 6),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 14,
+                    ),
                     decoration: BoxDecoration(
                       color: const Color(0xFFEEDFD0),
                       borderRadius: BorderRadius.circular(16),
@@ -312,9 +358,14 @@ class _WorkerDetailsScreenState extends State<WorkerDetailsScreen> {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF9A5222),
                         padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(25)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(25),
+                        ),
                       ),
-                      child: const Text("Confirm Details", style: TextStyle(fontSize: 16, color: Colors.white)),
+                      child: const Text(
+                        "Confirm Details",
+                        style: TextStyle(fontSize: 16, color: Colors.white),
+                      ),
                     ),
                   ),
 

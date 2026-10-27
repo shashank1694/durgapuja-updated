@@ -1,17 +1,13 @@
 import 'package:flutter/material.dart';
 import '../utils/colors.dart';
 import '../utils/constants.dart';
-import '../services/logging_service.dart';
 
 class AppProgressIndicator extends StatelessWidget {
   final String? message;
   final bool showMessage;
 
-  const AppProgressIndicator({
-    Key? key,
-    this.message,
-    this.showMessage = true,
-  }) : super(key: key);
+  const AppProgressIndicator({Key? key, this.message, this.showMessage = true})
+    : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -71,9 +67,7 @@ class LoadingOverlay extends StatelessWidget {
         if (isLoading)
           Container(
             color: Colors.black.withOpacity(0.5),
-            child: Center(
-              child: AppProgressIndicator(message: message),
-            ),
+            child: Center(child: AppProgressIndicator(message: message)),
           ),
       ],
     );
@@ -155,24 +149,24 @@ class StepProgressIndicator extends StatelessWidget {
                   color: isCompleted
                       ? AppColors.successGreen
                       : isCurrent
-                          ? AppColors.primaryBrown
-                          : AppColors.cardCream,
+                      ? AppColors.primaryBrown
+                      : AppColors.cardCream,
                   border: Border.all(
-                    color: isCurrent ? AppColors.primaryBrown : Colors.transparent,
+                    color: isCurrent
+                        ? AppColors.primaryBrown
+                        : Colors.transparent,
                     width: 2,
                   ),
                 ),
                 child: isCompleted
-                    ? const Icon(
-                        Icons.check,
-                        color: Colors.white,
-                        size: 16,
-                      )
+                    ? const Icon(Icons.check, color: Colors.white, size: 16)
                     : Center(
                         child: Text(
                           '${index + 1}',
                           style: TextStyle(
-                            color: isCurrent ? Colors.white : AppColors.textLight,
+                            color: isCurrent
+                                ? Colors.white
+                                : AppColors.textLight,
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
                           ),

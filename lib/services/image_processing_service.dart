@@ -15,8 +15,8 @@ class ImageProcessingService {
   final OpenAIService _openAIService;
 
   ImageProcessingService()
-      : _kreaService = KreaAIService(),
-        _openAIService = OpenAIService();
+    : _kreaService = KreaAIService(),
+      _openAIService = OpenAIService();
 
   // ==================== KREA GENERATION METHODS ====================
 
@@ -43,13 +43,16 @@ class ImageProcessingService {
     List<File> referenceImages,
   ) async {
     print('=== GENERATING WITH ${referenceImages.length} REFERENCES ===');
-    return await _kreaService.generateImageWithReferences(prompt, referenceImages);
+    return await _kreaService.generateImageWithReferences(
+      prompt,
+      referenceImages,
+    );
   }
 
   // ==================== OPENAI EDITING METHODS ====================
 
   /// Edit image with reference guidance using OpenAI API
-  /// 
+  ///
   /// This is the main editing method - combines GPT-4 Vision analysis
   /// with DALL-E 3 generation for precise image modifications
   Future<String> editImage({
@@ -162,7 +165,7 @@ class ImageProcessingService {
   // ==================== COMPLETE WORKFLOW METHODS ====================
 
   /// Complete workflow: Generate with Krea, then edit with OpenAI
-  /// 
+  ///
   /// Example: Generate Durga idol, then make expression fiercer
   Future<String> generateAndEdit({
     required String prompt,
@@ -173,7 +176,7 @@ class ImageProcessingService {
     print('=== COMPLETE WORKFLOW: GENERATE + EDIT ===');
     print('Step 1: Generating initial image...');
     final generatedImage = await generateInitialImage(prompt);
-    
+
     // Step 2: Edit with OpenAI
     print('Step 2: Editing image...');
     final editedUrl = await editImage(
@@ -181,7 +184,7 @@ class ImageProcessingService {
       referenceImageUrl: referenceImageUrl,
       editInstruction: editInstruction,
     );
-    
+
     return editedUrl;
   }
 
@@ -192,9 +195,15 @@ class ImageProcessingService {
   }
 
   /// Generate, then enhance lion
-  Future<String> generateAndEnhanceLion(String prompt, {bool majestic = true}) async {
+  Future<String> generateAndEnhanceLion(
+    String prompt, {
+    bool majestic = true,
+  }) async {
     final generatedImage = await generateInitialImage(prompt);
-    return await enhanceLion(imageUrl: generatedImage.url, makeMoreMajestic: majestic);
+    return await enhanceLion(
+      imageUrl: generatedImage.url,
+      makeMoreMajestic: majestic,
+    );
   }
 
   /// Generate with Krea, then apply multiple OpenAI edits sequentially
@@ -214,7 +223,10 @@ class ImageProcessingService {
       currentUrl = await makeExpressionFiercer(currentUrl);
     }
     if (lionEnhancement) {
-      currentUrl = await enhanceLion(imageUrl: currentUrl, makeMoreMajestic: true);
+      currentUrl = await enhanceLion(
+        imageUrl: currentUrl,
+        makeMoreMajestic: true,
+      );
     }
     if (ornamentEnhancement) {
       currentUrl = await enhanceOrnaments(imageUrl: currentUrl, addMore: true);
@@ -229,7 +241,7 @@ class ImageProcessingService {
   // ==================== REFERENCE-BASED ITERATION ====================
 
   /// Iterate on design by referencing previous generations
-  /// 
+  ///
   /// Use this to progressively improve a design using earlier versions as reference
   Future<String> iterateWithReference({
     required String currentImageUrl,
@@ -253,7 +265,8 @@ class ImageProcessingService {
       baseImageUrl: baseImageUrl,
       element: element,
       referenceImageUrl: referenceImageUrl,
-      customDescription: 'Incorporate the style and visual elements from the reference image',
+      customDescription:
+          'Incorporate the style and visual elements from the reference image',
     );
   }
 
@@ -262,7 +275,7 @@ class ImageProcessingService {
   /// Test both API connections
   Future<Map<String, bool>> testConnections() async {
     final results = <String, bool>{};
-    
+
     try {
       await _kreaService.testApiConnection();
       results['krea'] = true;
